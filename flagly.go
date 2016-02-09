@@ -32,7 +32,8 @@ func (f *FlaglySet) SetHandleFunc(hf interface{}) error {
 }
 
 func (f *FlaglySet) Run(args []string) (err error) {
-	if err = f.subHandler.Run(args); err != nil {
+	stack := []reflect.Value{}
+	if err = f.subHandler.Run(&stack, args); err != nil {
 		if e := IsShowUsage(err); e != nil {
 			err = errors.New(e.Usage())
 		}

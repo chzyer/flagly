@@ -159,7 +159,7 @@ func (h *Handler) findOption(name string) int {
 	return -1
 }
 
-func (h *Handler) parseToStruct(v reflect.Value, args []string) error {
+func (h *Handler) parseToStruct(v reflect.Value, args []string) ([]string, error) {
 	tokens := make([][]string, len(h.Options))
 	idx := 0
 	for ; idx < len(args); idx++ {
@@ -184,7 +184,7 @@ func (h *Handler) parseToStruct(v reflect.Value, args []string) error {
 				subArgs = append(subArgs, args[i])
 			}
 			if len(subArgs) < min {
-				return fmt.Errorf("args missing")
+				return args, fmt.Errorf("args missing")
 			}
 			idx += len(subArgs)
 			tokens[opIdx] = subArgs
@@ -211,13 +211,30 @@ func (h *Handler) parseToStruct(v reflect.Value, args []string) error {
 		} else if op.IsFlag() {
 			op.BindTo(v, tokens[idx])
 		} else {
-			return fmt.Errorf("invalid option type: %v", op.Type)
+			return args, fmt.Errorf("invalid option type: %v", op.Type)
 		}
 	}
-	return nil
+	return args, nil
 }
 
-func (h *Handler) Call(args []string) error {
+func (h *Handler) bindStackToStruct(stack []reflect.Value, value reflect.Value) {
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+	t := value.Type()
+	for i := 0; i < value.NumField(); i++ {
+		field := t.Field(i)
+		if StructTag(field.Tag).GetName() == flaglyParentName {
+			for _, s := range stack {
+				if s.Type().String() == field.Type.String() {
+					value.Field(i).Set(s)
+				}
+			}
+		}
+	}
+}
+
+func (h *Handler) Call(stack []reflect.Value, args []string) error {
 	if h.handleFunc.IsValid() {
 		t := h.handleFunc.Type()
 		numIn := t.NumIn()
@@ -225,7 +242,8 @@ func (h *Handler) Call(args []string) error {
 		for i := 0; i < numIn; i++ {
 			tIn := t.In(i)
 			switch tIn.String() {
-			case "*" + handlerPkgPath: // TODO: must be a pointer
+			case "*" + handlerPkgPath:
+				// TODO: must be a pointer
 				ins[i] = reflect.ValueOf(h)
 			default:
 				ins[i] = reflect.Zero(t.In(i))
@@ -237,9 +255,10 @@ func (h *Handler) Call(args []string) error {
 				if opType.Kind() == reflect.Ptr {
 					ins[0] = reflect.New(opType.Elem())
 				}
-				if err := h.parseToStruct(ins[0], args); err != nil {
+				if _, err := h.parseToStruct(ins[0], args); err != nil {
 					return err
 				}
+				h.bindStackToStruct(stack, ins[0])
 			}
 		}
 		// first argument is a struct
@@ -254,19 +273,32 @@ func (h *Handler) Call(args []string) error {
 	return nil
 }
 
-func (h *Handler) Run(args []string) (err error) {
+func (h *Handler) Run(stack *[]reflect.Value, args []string) (err error) {
 	runed := false
+
+	t := h.OptionType
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	value := reflect.New(t)
+	args, err = h.parseToStruct(value, args)
+	if err != nil {
+		return err
+	}
+
+	*stack = append(*stack, value)
+
 	if len(args) > 0 {
 		for _, ch := range h.GetChildren() {
 			if args[0] == ch.Name {
-				err = ch.Run(args[1:])
+				err = ch.Run(stack, args)
 				runed = true
 				break
 			}
 		}
 	}
 	if !runed {
-		err = h.Call(args)
+		err = h.Call(*stack, args)
 	}
 	if e := IsShowUsage(err); e != nil {
 		err = e.Trace(h)
