@@ -13,7 +13,7 @@ The easier way to parsing command-line flag in Golang.
 go get github.com/chzyer/flagly
 ```
 
-## struct binding
+## binding
 
 ```{go}
 type Config struct {
@@ -41,22 +41,73 @@ $ flagly-binding -v name
 config: &{Verbose:true Name:name}
 ```
 
-## struct routing
+## routing
 
 ```{go}
 type Git struct {
-	Version bool `v`
+	Version bool `v desc:"show version"`
 	
 	// sub handlers
 	Clone *GitClone `flaglyHandler`
-	Init  *GitInit `flaglyHandler`
+	Init  *GitInit  `flaglyHandler`
 }
 
 type GitClone struct {
+	Verbose  bool   `v desc:"be more verbose"`
+	Quiet    bool   `q desc:"be more quiet"`
+	Progress bool   `progress desc:"force progress reporting"`
+	Template string `arg:"template-directory"`
 
+	Repo string `[0]`
+	Dir  string `[1] default`
+}
+
+func (g *GitClone) FlaglyDesc() string {
+	return "Create an empty Git repository or reinitialize an existing one"
 }
 
 type GitInit struct {
 	Quiet bool `q desc:"be quiet"`
 }
+
+func (g *GitInit) FlaglyDesc() string {
+	return "Create an empty Git repository or reinitialize an existing one"
+}
+
+func main() {
+	var git Git
+	flagly.Run(&git)
+}
+```
+
+source file: [flagly-git](https://github.com/chzyer/flagly/blob/master/demo/flagly-git/flagly-git.go)
+
+```
+$ go install github.com/chzyer/flagly/demo/flagly-git
+$ flagly-git
+usage: flagly-git [option] <command>
+
+options:
+    -v                  show version
+    -h                  show help
+
+commands:
+    clone               Create an empty Git repository or reinitialize an existing one
+    init                Clone a repository into a new directory
+	
+$ flagly-get -v clone -h
+
+usage: flagly-git [flagly-git option] clone [option] [--] <repo> [<dir>]
+
+options:
+    -v                  be more verbose
+    -q                  be more quiet
+    -progress           force progress reporting
+    -template <template-directory>
+                        directory from which templates will be used
+    -h                  show help
+
+flagly-git options:
+    -v                  show version
+    -h                  show help
 ```
