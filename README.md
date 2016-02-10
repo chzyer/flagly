@@ -120,7 +120,7 @@ options:
 flagly-git options:
     -v                  show version
     -h                  show help
-$ flagly-git 	
+$ flagly-git -v clone repoName
 git clone
     &{Version:true Clone:<nil> Init:<nil> Add:<nil>}
     &{Parent:0xc20801e220 Verbose:false Quiet:false Progress:false Template: Repo:repoName Dir:}
