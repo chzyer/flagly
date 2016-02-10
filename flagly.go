@@ -7,8 +7,12 @@ import (
 	"sync"
 )
 
-func Compile(target interface{}) *FlaglySet {
-	return new(FlaglySet)
+func Compile(name string, target interface{}) (*FlaglySet, error) {
+	fset := New(name)
+	if err := fset.Compile(target); err != nil {
+		return nil, err
+	}
+	return fset, nil
 }
 
 type FlaglySet struct {
@@ -20,6 +24,10 @@ func New(name string) *FlaglySet {
 		subHandler: NewHandler(name),
 	}
 	return fset
+}
+
+func (f *FlaglySet) Compile(target interface{}) error {
+	return f.subHandler.Compile(reflect.TypeOf(target))
 }
 
 func (f *FlaglySet) Add(h *Handler) {

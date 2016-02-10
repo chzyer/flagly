@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	flaglyPrefix     = "flagly"
 	flaglyParentName = "flaglyParent"
 )
 
@@ -31,33 +32,61 @@ const (
 )
 
 type Option struct {
-	Index    int
-	Name     string
-	LongName string
-	Type     OptionType
-	BindType reflect.Type
-	Typer    Typer
-	Desc     string
-	Default  *string
-	ArgName  *string
-	ArgIdx   int
+	Index     int
+	Name      string
+	LongName  string
+	Type      OptionType
+	BindType  reflect.Type
+	Typer     Typer
+	Desc      string
+	Default   *string
+	ArgName   *string
+	ArgIdx    int
+	ShowUsage bool
 }
 
-func NewFlag(name string, bind reflect.Type) *Option {
-	return &Option{
+func NewHelpFlag() *Option {
+	op, err := NewFlag("h", reflect.TypeOf(true))
+	if err != nil {
+		panic(err)
+	}
+	op.ShowUsage = true
+	op.Desc = "show help"
+	return op
+}
+
+func NewFlag(name string, bind reflect.Type) (*Option, error) {
+	op := &Option{
 		Name:     name,
 		BindType: bind,
 		Type:     FlagOption,
 	}
+	if err := op.init(); err != nil {
+		return nil, err
+	}
+	return op, nil
 }
 
-func NewArg(name string, idx int, bind reflect.Type) *Option {
-	return &Option{
+func NewArg(name string, idx int, bind reflect.Type) (*Option, error) {
+	op := &Option{
 		Name:     name,
 		Type:     ArgOption,
 		BindType: bind,
 		ArgIdx:   idx,
 	}
+	if err := op.init(); err != nil {
+		return nil, err
+	}
+	return op, nil
+}
+
+func (o *Option) init() error {
+	typer, err := GetTyper(o.BindType)
+	if err != nil {
+		return err
+	}
+	o.Typer = typer
+	return nil
 }
 
 func (o *Option) BindTo(value reflect.Value, args []string) {
@@ -173,7 +202,7 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := StructTag(field.Tag)
-		if tag.GetName() == flaglyParentName {
+		if strings.HasPrefix(tag.GetName(), flaglyPrefix) {
 			continue
 		}
 
@@ -187,9 +216,9 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 			if long == "" {
 				long = strings.ToLower(field.Name)
 			}
-			op = NewArg(long, GetIdxInArray(short), field.Type)
+			op, err = NewArg(long, GetIdxInArray(short), field.Type)
 		} else {
-			op = NewFlag(short, field.Type)
+			op, err = NewFlag(short, field.Type)
 			op.LongName = long
 		}
 		if op.Name == "-" {
@@ -198,12 +227,7 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 		op.Index = i
 
 		op.Default = tag.GetPtr("default")
-		typer, err := GetTyper(op.BindType)
-		if err != nil {
-			return nil, err
-		}
-		op.Typer = typer
-		if namer, ok := typer.(BaseTypeArgNamer); ok {
+		if namer, ok := op.Typer.(BaseTypeArgNamer); ok {
 			argName := namer.ArgName()
 			if argName != "" {
 				op.ArgName = &argName

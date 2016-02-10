@@ -16,6 +16,7 @@ var (
 
 const (
 	handlerPkgPath = "flagly.Handler"
+	flaglyHandler  = "flaglyHandler"
 )
 
 var (
@@ -58,29 +59,14 @@ func (h *Handler) SetGetChildren(f func(*Handler) []*Handler) {
 	h.onGetChildren = f
 }
 
-// only func is accepted
-// 1. func() error
-// 2. func(*struct) error
-// 3. func(*struct, *flagly.Handler) error
-// 4. func(*flagly.Handler) error
-func (h *Handler) SetHandleFunc(obj interface{}) error {
-	funcValue := reflect.ValueOf(obj)
-	if funcValue.Kind() != reflect.Func {
-		return ErrMustAFunc
+func (h *Handler) SetOptionType(option reflect.Type) error {
+	op := option
+	if op.Kind() == reflect.Ptr {
+		op = op.Elem()
 	}
-	t := funcValue.Type()
-	if t.NumOut() != 1 || !t.Out(0).Implements(IfaceError) {
-		return ErrFuncOutMustAError
-	}
-	if t.NumIn() >= 1 {
-		option := t.In(0)
-		if option.Kind() == reflect.Ptr {
-			option = option.Elem()
-		}
-		if option.Kind() == reflect.Struct {
-			if option.String() != handlerPkgPath {
-				h.OptionType = t.In(0)
-			}
+	if op.Kind() == reflect.Struct {
+		if op.String() != handlerPkgPath {
+			h.OptionType = option
 		}
 	}
 	if h.OptionType != nil {
@@ -90,7 +76,81 @@ func (h *Handler) SetHandleFunc(obj interface{}) error {
 			return err
 		}
 	}
+	return nil
+}
+
+// only func is accepted
+// 1. func() error
+// 2. func(*struct) error
+// 3. func(*struct, *flagly.Handler) error
+// 4. func(*flagly.Handler) error
+func (h *Handler) SetHandleFunc(obj interface{}) error {
+	return h.setHandleFunc(reflect.ValueOf(obj))
+}
+
+func (h *Handler) setHandleFunc(funcValue reflect.Value) error {
+	if funcValue.Kind() != reflect.Func {
+		return ErrMustAFunc
+	}
+	t := funcValue.Type()
+	if t.NumOut() != 1 || !t.Out(0).Implements(IfaceError) {
+		return ErrFuncOutMustAError
+	}
+	if t.NumIn() >= 1 {
+		if err := h.SetOptionType(t.In(0)); err != nil {
+			return err
+		}
+	}
 	h.handleFunc = funcValue
+	return nil
+}
+
+func (h *Handler) findHandleFunc(t reflect.Type) *reflect.Method {
+	for i := 0; i < t.NumMethod(); i++ {
+		method := t.Method(i)
+		if method.Name == flaglyHandle {
+			return &method
+		}
+	}
+	return nil
+}
+
+func (h *Handler) Compile(t reflect.Type) error {
+	method := h.findHandleFunc(t)
+	if method != nil {
+		if err := h.setHandleFunc(method.Func); err != nil {
+			return err
+		}
+	} else {
+		if err := h.SetOptionType(t); err != nil {
+			return err
+		}
+	}
+
+	if IsImplementDescer(h.OptionType) {
+		op := h.OptionType
+		if op.Kind() == reflect.Ptr {
+			op = op.Elem()
+		}
+		value := reflect.New(op)
+		h.Desc = value.Interface().(FlaglyDescer).FlaglyDesc()
+	}
+
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if StructTag(field.Tag).GetName() == flaglyHandler {
+			subh := NewHandler(strings.ToLower(field.Name))
+			if err := subh.Compile(field.Type); err != nil {
+				return err
+			}
+			h.AddHandler(subh)
+		}
+	}
+
 	return nil
 }
 
@@ -147,6 +207,16 @@ func (h *Handler) parseOption() ([]*Option, error) {
 		return nil, nil
 	}
 	ops, err := ParseStructToOptions(h.OptionType)
+	hasHelp := false
+	for _, op := range ops {
+		if op.Name == "-h" {
+			hasHelp = true
+			break
+		}
+	}
+	if !hasHelp {
+		ops = append(ops, NewHelpFlag())
+	}
 	return ops, err
 }
 
@@ -175,6 +245,9 @@ func (h *Handler) parseToStruct(v reflect.Value, args []string) ([]string, error
 				continue
 			}
 			op := h.Options[opIdx]
+			if op.ShowUsage {
+				return args, ErrShowUsage
+			}
 			min, max := op.Typer.NumArgs()
 			subArgs := make([]string, 0, max)
 			for i := idx + 1; i <= idx+max; i++ {
@@ -266,32 +339,45 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 		if err, ok := out[0].Interface().(error); ok {
 			return err
 		}
+		return nil
 	} else {
 		// show usage
 		return ErrShowUsage
 	}
-	return nil
+}
+
+func (h *Handler) getChildNames() (names []string) {
+	for _, n := range h.GetChildren() {
+		names = append(names, n.Name)
+	}
+	return names
 }
 
 func (h *Handler) Run(stack *[]reflect.Value, args []string) (err error) {
+	defer func() {
+		if e := IsShowUsage(err); e != nil {
+			err = e.Trace(h)
+		}
+	}()
 	runed := false
-
-	t := h.OptionType
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
+	var value reflect.Value
+	if h.OptionType != nil {
+		t := h.OptionType
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		value = reflect.New(t)
+		args, err = h.parseToStruct(value, args)
+		if err != nil {
+			return err
+		}
 	}
-	value := reflect.New(t)
-	args, err = h.parseToStruct(value, args)
-	if err != nil {
-		return err
-	}
-
 	*stack = append(*stack, value)
 
 	if len(args) > 0 {
 		for _, ch := range h.GetChildren() {
 			if args[0] == ch.Name {
-				err = ch.Run(stack, args)
+				err = ch.Run(stack, args[1:])
 				runed = true
 				break
 			}
@@ -299,9 +385,6 @@ func (h *Handler) Run(stack *[]reflect.Value, args []string) (err error) {
 	}
 	if !runed {
 		err = h.Call(*stack, args)
-	}
-	if e := IsShowUsage(err); e != nil {
-		err = e.Trace(h)
 	}
 	return err
 }
@@ -353,7 +436,7 @@ func (h *Handler) usage(buf *bytes.Buffer, prefix string) error {
 
 	buf.WriteString("usage: " + prefix + h.Name)
 	if hasFlags {
-		buf.WriteString(" [options]")
+		buf.WriteString(" [option]")
 	}
 	if hasCommands {
 		buf.WriteString(" <command>")

@@ -4,15 +4,25 @@ import "reflect"
 
 var (
 	emptyFlaglyIniter FlaglyIniter
+	emptyFlaglyDescer FlaglyDescer
 	FlaglyIniterName  = "FlaglyInit"
+	flaglyHandle      = "FlaglyHandle"
 )
 
 type FlaglyIniter interface {
 	FlaglyInit()
 }
 
+type FlaglyDescer interface {
+	FlaglyDesc() string
+}
+
 func IsImplementIniter(t reflect.Type) bool {
 	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyIniter).Elem())
+}
+
+func IsImplementDescer(t reflect.Type) bool {
+	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyDescer).Elem())
 }
 
 func IsImplemented(t, target reflect.Type) bool {
