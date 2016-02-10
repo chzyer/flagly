@@ -2,10 +2,24 @@ package flagly
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"sync"
+)
+
+const (
+	handlerPkgPath = "flagly.Handler"
+	flaglyHandler  = "flaglyHandler"
+)
+
+var (
+	ErrMustAFunc         = errors.New("argument must be a func")
+	ErrFuncOutMustAError = errors.New("func.out must be a error")
+
+	ErrMustAPtrToStruct = errors.New("must a pointer to struct")
+	ErrMustAStruct      = errors.New("must a struct")
 )
 
 func Exit(info interface{}) {

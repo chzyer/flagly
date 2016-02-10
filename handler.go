@@ -2,21 +2,10 @@ package flagly
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
-)
-
-var (
-	ErrMustAFunc         = errors.New("argument must be a func")
-	ErrFuncOutMustAError = errors.New("func.out must be a error")
-)
-
-const (
-	handlerPkgPath = "flagly.Handler"
-	flaglyHandler  = "flaglyHandler"
 )
 
 var (
