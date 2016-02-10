@@ -1,8 +1,14 @@
 package main
 
-import "github.com/chzyer/flagly"
+import (
+	"fmt"
+
+	"github.com/chzyer/flagly"
+)
 
 type GitClone struct {
+	Parent *Git `flaglyParent`
+
 	Verbose  bool   `v desc:"be more verbose"`
 	Quiet    bool   `q desc:"be more quiet"`
 	Progress bool   `progress desc:"force progress reporting"`
@@ -17,7 +23,11 @@ func (g *GitClone) FlaglyInit() {
 }
 
 func (g *GitClone) FlaglyHandle() error {
-	println("git clone handler")
+	if g.Repo == "" {
+		return flagly.Error("error: repo is empty")
+	}
+
+	fmt.Printf("git clone\n    %+v\n    %+v\n", g.Parent, g)
 	return nil
 }
 

@@ -7,10 +7,14 @@ var (
 )
 
 type showUsageError struct {
+	info     string
 	handlers []*Handler
 }
 
 func (s showUsageError) Error() string {
+	if s.info != "" {
+		return s.info + "\n\n" + s.Usage()
+	}
 	return s.Usage()
 }
 
@@ -21,6 +25,12 @@ func (s *showUsageError) Trace(h *Handler) *showUsageError {
 
 func (s *showUsageError) Usage() string {
 	return ShowUsage(s.handlers)
+}
+
+func Error(info string) error {
+	return &showUsageError{
+		info: info,
+	}
 }
 
 func ShowUsage(hs []*Handler) string {

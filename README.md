@@ -53,6 +53,8 @@ type Git struct {
 }
 
 type GitClone struct {
+	Parent *Git `flaglyParent`
+
 	Verbose  bool   `v desc:"be more verbose"`
 	Quiet    bool   `q desc:"be more quiet"`
 	Progress bool   `progress desc:"force progress reporting"`
@@ -60,6 +62,14 @@ type GitClone struct {
 
 	Repo string `[0]`
 	Dir  string `[1] default`
+}
+
+func (g *GitClone) FlaglyHandle() error {
+	if g.Repo == "" {
+		return flagly.ErrShowUsage
+	}
+	fmt.Printf("git clone %+v %+v\n", g.Parent, g)
+	return nil
 }
 
 func (g *GitClone) FlaglyDesc() string {
@@ -71,7 +81,7 @@ type GitInit struct {
 }
 
 func (g *GitInit) FlaglyDesc() string {
-	return "Create an empty Git repository or reinitialize an existing one"
+	return "Clone a repository into a new directory"
 }
 
 func main() {
@@ -110,4 +120,8 @@ options:
 flagly-git options:
     -v                  show version
     -h                  show help
+$ flagly-git 	
+git clone
+    &{Version:true Clone:<nil> Init:<nil> Add:<nil>}
+    &{Parent:0xc20801e220 Verbose:false Quiet:false Progress:false Template: Repo:repoName Dir:}
 ```
