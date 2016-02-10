@@ -35,3 +35,28 @@ func main() {
 
 source file: [flagly-binding](https://github.com/chzyer/flagly/blob/master/demo/flagly-binding/flagly-binding.go)
 
+```
+$ go install github.com/chzyer/flagly/demo/flagly-binding
+$ flagly-binding -v name
+config: &{Verbose:true Name:name}
+```
+
+## struct routing
+
+```{go}
+type Git struct {
+	Version bool `v`
+	
+	// sub handlers
+	Clone *GitClone `flaglyHandler`
+	Init  *GitInit `flaglyHandler`
+}
+
+type GitClone struct {
+
+}
+
+type GitInit struct {
+	Quiet bool `q desc:"be quiet"`
+}
+```

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/chzyer/flagly"
 )
@@ -20,5 +19,5 @@ func NewConfig() *Config {
 
 func main() {
 	cfg := NewConfig()
-	fmt.Printf("config: -v=%v name=%v\n", cfg.Verbose, strconv.Quote(cfg.Name))
+	fmt.Printf("config: %+v\n", cfg)
 }
