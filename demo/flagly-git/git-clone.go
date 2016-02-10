@@ -7,6 +7,7 @@ import (
 )
 
 type GitClone struct {
+	// we can get struct `Git` directly by presenting `flaglyParent`,
 	Parent *Git `flaglyParent`
 
 	Verbose  bool   `v desc:"be more verbose"`
@@ -15,7 +16,7 @@ type GitClone struct {
 	Template string `arg:"template-directory"`
 
 	Repo string `[0]`
-	Dir  string `[1] default`
+	Dir  string `[1] default:"."`
 }
 
 func (g *GitClone) FlaglyInit() {
