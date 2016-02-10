@@ -250,7 +250,7 @@ func (h *Handler) parseToStruct(v reflect.Value, args []string) ([]string, error
 			}
 			min, max := op.Typer.NumArgs()
 			subArgs := make([]string, 0, max)
-			for i := idx + 1; i <= idx+max; i++ {
+			for i := idx + 1; i <= idx+max && i < len(args); i++ {
 				if !op.Typer.CanBeValue(args[i]) {
 					break
 				}
@@ -485,4 +485,29 @@ func (h *Handler) usageOptions(name string) string {
 		}
 	}
 	return buf.String()
+}
+
+func (h *Handler) Bind(ptr reflect.Value, args []string) (err error) {
+	if ptr.Kind() != reflect.Ptr {
+		return ErrMustAPtrToStruct
+	}
+	defer func() {
+		if e := IsShowUsage(err); e != nil {
+			err = e.Trace(h)
+		}
+	}()
+	if h.OptionType != nil {
+		t := h.OptionType
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		value := reflect.New(t)
+		_, err = h.parseToStruct(value, args)
+		if err != nil {
+			return err
+		}
+
+		ptr.Elem().Set(value.Elem())
+	}
+	return nil
 }

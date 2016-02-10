@@ -2,10 +2,51 @@ package flagly
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
+	"os"
 	"reflect"
 	"sync"
 )
+
+func Exit(info interface{}) {
+	println(fmt.Sprint(info))
+	os.Exit(2)
+}
+
+func Bind(target interface{}) {
+	if err := BindByArgs(target, os.Args); err != nil {
+		Exit(err)
+	}
+}
+
+func Run(target interface{}) {
+	if err := RunByArgs(target, os.Args); err != nil {
+		Exit(err)
+	}
+}
+
+func BindByArgs(target interface{}, args []string) error {
+	fset, err := Compile(args[0], target)
+	if err != nil {
+		return err
+	}
+	ptr := reflect.ValueOf(target)
+	if err := fset.Bind(ptr, args[1:]); err != nil {
+		return err
+	}
+	return nil
+}
+
+func RunByArgs(target interface{}, args []string) error {
+	fset, err := Compile(args[0], target)
+	if err != nil {
+		return err
+	}
+	if err := fset.Run(args[1:]); err != nil {
+		return err
+	}
+	return nil
+}
 
 func Compile(name string, target interface{}) (*FlaglySet, error) {
 	fset := New(name)
@@ -39,12 +80,14 @@ func (f *FlaglySet) SetHandleFunc(hf interface{}) error {
 	return f.subHandler.SetHandleFunc(hf)
 }
 
+func (f *FlaglySet) Bind(value reflect.Value, args []string) error {
+	return f.subHandler.Bind(value, args)
+}
+
 func (f *FlaglySet) Run(args []string) (err error) {
 	stack := []reflect.Value{}
 	if err = f.subHandler.Run(&stack, args); err != nil {
-		if e := IsShowUsage(err); e != nil {
-			err = errors.New(e.Usage())
-		}
+		return err
 	}
 	return
 }

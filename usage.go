@@ -10,8 +10,8 @@ type showUsageError struct {
 	handlers []*Handler
 }
 
-func (showUsageError) Error() string {
-	return "show usage"
+func (s showUsageError) Error() string {
+	return s.Usage()
 }
 
 func (s *showUsageError) Trace(h *Handler) *showUsageError {
