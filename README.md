@@ -129,3 +129,10 @@ git clone
     &{Version:true Clone:<nil> Init:<nil> Add:<nil>}
     &{Parent:0xc20801e220 Verbose:false Quiet:false Progress:false Template: Repo:repoName Dir:}
 ```
+
+# Feedback
+
+If you have any questions, please submit a github issue and any pull requests is welcomed :)
+
+* [https://twitter.com/chzyer](https://twitter.com/chzyer)  
+* [http://weibo.com/2145262190](http://weibo.com/2145262190)  
