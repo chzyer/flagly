@@ -93,9 +93,10 @@ func main() {
 
 source file: [flagly-git](https://github.com/chzyer/flagly/blob/master/demo/flagly-git/flagly-git.go)
 
-```
+```{shell}
 $ go install github.com/chzyer/flagly/demo/flagly-git
 $ flagly-git
+
 usage: flagly-git [option] <command>
 
 options:
@@ -121,7 +122,9 @@ options:
 flagly-git options:
     -v                  show version
     -h                  show help
+	
 $ flagly-git -v clone repoName
+
 git clone
     &{Version:true Clone:<nil> Init:<nil> Add:<nil>}
     &{Parent:0xc20801e220 Verbose:false Quiet:false Progress:false Template: Repo:repoName Dir:}
