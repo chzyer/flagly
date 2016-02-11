@@ -57,6 +57,7 @@ func NewHelpFlag() *Option {
 
 func NewFlag(name string, bind reflect.Type) (*Option, error) {
 	op := &Option{
+		Index:    -1,
 		Name:     name,
 		BindType: bind,
 		Type:     FlagOption,
@@ -69,6 +70,7 @@ func NewFlag(name string, bind reflect.Type) (*Option, error) {
 
 func NewArg(name string, idx int, bind reflect.Type) (*Option, error) {
 	op := &Option{
+		Index:    -1,
 		Name:     name,
 		Type:     ArgOption,
 		BindType: bind,
@@ -90,6 +92,9 @@ func (o *Option) init() error {
 }
 
 func (o *Option) BindTo(value reflect.Value, args []string) {
+	if o.Index < 0 {
+		return
+	}
 	f := value.Elem().Field(o.Index)
 	if args == nil {
 		if o.HasDefault() {

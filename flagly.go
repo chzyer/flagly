@@ -151,3 +151,59 @@ func getDescMap() map[uintptr]string {
 	descGuard.Unlock()
 	return ret
 }
+
+func SplitArgs(content string) []string {
+	r := bytes.NewReader([]byte(content))
+	var EmptyQuote = rune(0)
+	var ret []string
+
+	var quote rune
+	// 0: not quote char, 1: quote start, 2: quote end
+	isQuote := func(ch rune) int {
+		if quote == EmptyQuote {
+			if ch == '"' || ch == '\'' {
+				return 1
+			}
+			return 0
+		}
+		if ch == quote {
+			return 2
+		}
+		return 0
+	}
+	isInQuote := func(ch rune) bool {
+		return quote != EmptyQuote
+	}
+	isSpace := func(ch rune) bool {
+		return ch == ' '
+	}
+
+	var buf []rune
+	for {
+		ch, _, err := r.ReadRune()
+		if err != nil {
+			break
+		}
+		chType := isQuote(ch)
+		if chType == 0 {
+			if isSpace(ch) && !isInQuote(ch) {
+				if len(buf) > 0 {
+					ret = append(ret, string(buf))
+					buf = buf[:0]
+				}
+			} else {
+				buf = append(buf, ch)
+			}
+		} else if chType == 2 { // append even meet empty string
+			ret = append(ret, string(buf))
+			buf = buf[:0]
+			quote = EmptyQuote
+		} else { // chType == 1
+			quote = ch
+		}
+	}
+	if len(buf) > 0 {
+		ret = append(ret, string(buf))
+	}
+	return ret
+}

@@ -104,6 +104,22 @@ func (h *Handler) findHandleFunc(t reflect.Type) *reflect.Method {
 	return nil
 }
 
+func (h *Handler) tryToAddHelpOption(ops []*Option) []*Option {
+	if len(h.GetChildren()) == 0 {
+		hasHelp := false
+		for _, op := range ops {
+			if op.Name == "-h" {
+				hasHelp = true
+				break
+			}
+		}
+		if !hasHelp {
+			ops = append(ops, NewHelpFlag())
+		}
+	}
+	return ops
+}
+
 func (h *Handler) Compile(t reflect.Type) error {
 	method := h.findHandleFunc(t)
 	if method != nil {
@@ -139,6 +155,8 @@ func (h *Handler) Compile(t reflect.Type) error {
 			h.AddHandler(subh)
 		}
 	}
+
+	h.Options = h.tryToAddHelpOption(h.Options)
 
 	return nil
 }
@@ -196,16 +214,6 @@ func (h *Handler) parseOption() ([]*Option, error) {
 		return nil, nil
 	}
 	ops, err := ParseStructToOptions(h.OptionType)
-	hasHelp := false
-	for _, op := range ops {
-		if op.Name == "-h" {
-			hasHelp = true
-			break
-		}
-	}
-	if !hasHelp {
-		ops = append(ops, NewHelpFlag())
-	}
 	return ops, err
 }
 
@@ -312,16 +320,7 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 			}
 		}
 		if len(ins) > 0 {
-			opType := t.In(0)
-			if opType.String() != "*"+handlerPkgPath {
-				if opType.Kind() == reflect.Ptr {
-					ins[0] = reflect.New(opType.Elem())
-				}
-				if _, err := h.parseToStruct(ins[0], args); err != nil {
-					return err
-				}
-				h.bindStackToStruct(stack, ins[0])
-			}
+			ins[0] = stack[len(stack)-1]
 		}
 		// first argument is a struct
 		out := h.handleFunc.Call(ins)
@@ -333,6 +332,10 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 		// show usage
 		return ErrShowUsage
 	}
+}
+
+func (h *Handler) GetCommands() []string {
+	return h.getChildNames()
 }
 
 func (h *Handler) getChildNames() (names []string) {
@@ -423,31 +426,38 @@ func (h *Handler) usage(buf *bytes.Buffer, prefix string) error {
 	children := h.GetChildren()
 	hasCommands := len(children) > 0
 
-	buf.WriteString("usage: " + prefix + h.Name)
-	if hasFlags {
-		buf.WriteString(" [option]")
+	if h.Desc != "" {
+		buf.WriteString(h.Desc)
+		buf.WriteString("\n\n")
 	}
-	if hasCommands {
-		buf.WriteString(" <command>")
-	}
-	if hasArgs {
+
+	if h.Name != "" {
+		buf.WriteString("usage: " + prefix + h.Name)
 		if hasFlags {
-			buf.WriteString(" [--]")
+			buf.WriteString(" [option]")
 		}
-		for _, op := range h.Options {
-			if op.IsArg() {
-				buf.WriteString(" ")
-				if op.HasDefault() {
-					buf.WriteString("[")
-				}
-				buf.WriteString("<" + op.Name + ">")
-				if op.HasDefault() {
-					buf.WriteString("]")
+		if hasCommands {
+			buf.WriteString(" <command>")
+		}
+		if hasArgs {
+			if hasFlags {
+				buf.WriteString(" [--]")
+			}
+			for _, op := range h.Options {
+				if op.IsArg() {
+					buf.WriteString(" ")
+					if op.HasDefault() {
+						buf.WriteString("[")
+					}
+					buf.WriteString("<" + op.Name + ">")
+					if op.HasDefault() {
+						buf.WriteString("]")
+					}
 				}
 			}
 		}
+		buf.WriteString("\n")
 	}
-	buf.WriteString("\n")
 
 	if hasFlags {
 		buf.WriteString(h.usageOptions("options"))

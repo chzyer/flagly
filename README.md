@@ -6,6 +6,7 @@
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chzyer/flagly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 The easier way to parsing command-line flag in Golang.
+It can also provides shell-like interactives by using [readline](https://github.com/chzyer/readline)
 
 # Usage
 
