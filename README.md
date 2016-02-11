@@ -3,10 +3,10 @@
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/chzyer/flagly.svg?branch=master)](https://travis-ci.org/chzyer/flagly)
 [![GoDoc](https://godoc.org/github.com/chzyer/flagly?status.svg)](https://godoc.org/github.com/chzyer/flagly)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chzyer/flagly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-The easier way to parsing command-line flag in Golang.
-It can also provides shell-like interactives by using [readline](https://github.com/chzyer/readline)
+The easier way to parsing command-line flag in Golang, also building a command line app.
+
+It can also provides shell-like interactives by using [readline](https://github.com/chzyer/readline) (demo: [flagly-shell](https://github.com/chzyer/flagly/blob/master/demo/flagly-shell/flagly-shell.go))
 
 # Usage
 
