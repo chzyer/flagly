@@ -1,3 +1,30 @@
+/*
+usage:
+    $ go install github.com/chzyer/flagly/demo/flagly-shell
+    $ flagly-shell
+    > help
+    commands:
+        help
+        time
+        base64
+    > time
+    2016-02-11 12:12:43
+    > time -h
+    usage: time [option] [--] [<layout>]
+
+    options:
+        -h                  show help
+    > base64
+    missing content
+
+    usage: base64 [option] [--] <content>
+
+    options:
+        -d                  decode string
+        -h                  show help
+    > base64 hello
+    aGVsbG8=
+*/
 package main
 
 import (
@@ -30,18 +57,21 @@ func (t *Time) FlaglyHandle() error {
 
 type Base64 struct {
 	IsDecode bool   `d desc:"decode string"`
-	String   string `[0]`
+	Content  string `[0]`
 }
 
 func (b *Base64) FlaglyHandle() error {
+	if b.Content == "" {
+		return flagly.Error("missing content")
+	}
 	if b.IsDecode {
-		ret, err := base64.URLEncoding.DecodeString(b.String)
+		ret, err := base64.URLEncoding.DecodeString(b.Content)
 		if err != nil {
 			return err
 		}
 		println(string(ret))
 	} else {
-		ret := base64.URLEncoding.EncodeToString([]byte(b.String))
+		ret := base64.URLEncoding.EncodeToString([]byte(b.Content))
 		println(ret)
 	}
 	return nil
