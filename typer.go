@@ -19,6 +19,9 @@ func init() {
 }
 
 func getTypeName(t reflect.Type) string {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
 	return t.String()
 }
 
@@ -30,7 +33,11 @@ func RegisterAll(objs ...BaseTyperParser) {
 
 func Register(objs ...Typer) {
 	for _, obj := range objs {
-		types[getTypeName(obj.Type())] = obj
+		t := obj.Type()
+		if t.Kind() == reflect.Ptr {
+			t = t.Elem()
+		}
+		types[getTypeName(t)] = obj
 	}
 }
 
@@ -86,7 +93,13 @@ type ValueWrap struct{ BaseTyperParser }
 
 func SetToSource(source, val reflect.Value) {
 	if source.Kind() == reflect.Ptr {
-		source = source.Elem()
+		if source.IsNil() {
+			ptr := reflect.New(source.Type().Elem())
+			source.Set(ptr)
+		}
+		if val.Kind() != reflect.Ptr {
+			source = source.Elem()
+		}
 	}
 	source.Set(val)
 }

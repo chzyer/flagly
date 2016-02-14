@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	emptyError error
-	emptyType  reflect.Type
-	emptyValue reflect.Value
-	IfaceError = reflect.TypeOf(&emptyError).Elem()
+	EmptyError error
+	EmptyType  reflect.Type
+	EmptyValue reflect.Value
+	IfaceError = reflect.TypeOf(&EmptyError).Elem()
 )
 
 type Handler struct {
@@ -35,6 +35,13 @@ func NewHandler(name string) *Handler {
 	return h
 }
 
+func (h *Handler) GetRoot() *Handler {
+	if h.Parent != nil {
+		return h.Parent.GetRoot()
+	}
+	return h
+}
+
 func (h *Handler) ResetHandler() {
 	h.Children = nil
 }
@@ -42,6 +49,7 @@ func (h *Handler) ResetHandler() {
 func (h *Handler) AddHandler(child *Handler) {
 	child.Parent = h
 	h.Children = append(h.Children, child)
+	child.EnsureHelpOption()
 }
 
 func (h *Handler) SetGetChildren(f func(*Handler) []*Handler) {
@@ -104,6 +112,10 @@ func (h *Handler) findHandleFunc(t reflect.Type) *reflect.Method {
 	return nil
 }
 
+func (h *Handler) EnsureHelpOption() {
+	h.Options = h.tryToAddHelpOption(h.Options)
+}
+
 func (h *Handler) tryToAddHelpOption(ops []*Option) []*Option {
 	if len(h.GetChildren()) == 0 {
 		hasHelp := false
@@ -118,6 +130,14 @@ func (h *Handler) tryToAddHelpOption(ops []*Option) []*Option {
 		}
 	}
 	return ops
+}
+
+func (h *Handler) CompileIface(obj interface{}) error {
+	return h.Compile(reflect.TypeOf(obj))
+}
+
+func (h *Handler) log(obj interface{}) {
+	println(fmt.Sprintf("[handler:%v] %v", h.Name, obj))
 }
 
 func (h *Handler) Compile(t reflect.Type) error {
@@ -210,11 +230,19 @@ func (h *Handler) Usage(prefix string) string {
 }
 
 func (h *Handler) parseOption() ([]*Option, error) {
-	if h.OptionType == emptyType {
+	if h.OptionType == EmptyType {
 		return nil, nil
 	}
 	ops, err := ParseStructToOptions(h.OptionType)
 	return ops, err
+}
+
+func (h *Handler) GetOptionNames() []string {
+	ret := make([]string, 0, len(h.Options))
+	for _, op := range h.Options {
+		ret = append(ret, op.Name)
+	}
+	return ret
 }
 
 func (h *Handler) findOption(name string) int {

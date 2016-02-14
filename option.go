@@ -128,19 +128,18 @@ func (o *Option) usage(buf *bytes.Buffer) {
 	if o.IsFlag() {
 		b.WriteString("-" + o.Name)
 		min, _ := o.Typer.NumArgs()
-		if min > 0 && o.HasArgName() {
-			if o.Default != nil {
-				b.WriteString("[=")
+
+		if min > 0 {
+			if o.HasArgName() {
+				if o.HasDefault() {
+					b.WriteString(fmt.Sprintf(" <%v=%v>", *o.ArgName, *o.Default))
+				} else {
+					b.WriteString(fmt.Sprintf(" <%v>", *o.ArgName))
+				}
+			} else if o.HasDefault() {
+				b.WriteString(fmt.Sprintf(` "%v"`, *o.Default))
 			} else {
-				b.WriteString(" ")
-			}
-			b.WriteString("<" + *o.ArgName)
-			if o.HasDefault() {
-				b.WriteString("=" + *o.Default)
-			}
-			b.WriteString(">")
-			if o.Default != nil {
-				b.WriteString("]")
+
 			}
 		}
 		if b.Len() > length {
@@ -224,6 +223,9 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 			op, err = NewArg(long, GetIdxInArray(short), field.Type)
 		} else {
 			op, err = NewFlag(short, field.Type)
+			if err != nil {
+				return nil, err
+			}
 			op.LongName = long
 		}
 		if op.Name == "-" {
