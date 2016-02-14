@@ -81,8 +81,11 @@ func (h *Handler) SetOptionType(option reflect.Type) error {
 // 2. func(*struct) error
 // 3. func(*struct, *flagly.Handler) error
 // 4. func(*flagly.Handler) error
-func (h *Handler) SetHandleFunc(obj interface{}) error {
-	return h.setHandleFunc(reflect.ValueOf(obj))
+func (h *Handler) SetHandleFunc(obj interface{}) {
+	err := h.setHandleFunc(reflect.ValueOf(obj))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (h *Handler) setHandleFunc(funcValue reflect.Value) error {

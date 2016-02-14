@@ -90,8 +90,8 @@ func (f *FlaglySet) Add(h *Handler) {
 	return
 }
 
-func (f *FlaglySet) SetHandleFunc(hf interface{}) error {
-	return f.subHandler.SetHandleFunc(hf)
+func (f *FlaglySet) SetHandleFunc(hf interface{}) {
+	f.subHandler.SetHandleFunc(hf)
 }
 
 func (f *FlaglySet) Bind(value reflect.Value, args []string) error {
