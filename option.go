@@ -121,6 +121,10 @@ func (o *Option) IsArg() bool {
 	return o.Type == ArgOption
 }
 
+func (o *Option) HasDesc() bool {
+	return o.Desc != ""
+}
+
 func (o *Option) usage(buf *bytes.Buffer) {
 	b := bytes.NewBuffer(nil)
 	b.WriteString("    ")
@@ -142,12 +146,14 @@ func (o *Option) usage(buf *bytes.Buffer) {
 
 			}
 		}
-		if b.Len() > length {
-			b.WriteString("\n" + strings.Repeat(" ", length))
-		} else {
-			b.WriteString(strings.Repeat(" ", length-b.Len()))
+		if o.HasDesc() {
+			if b.Len() > length {
+				b.WriteString("\n" + strings.Repeat(" ", length))
+			} else {
+				b.WriteString(strings.Repeat(" ", length-b.Len()))
+			}
+			b.WriteString(o.Desc)
 		}
-		b.WriteString(o.Desc)
 	}
 	b.WriteTo(buf)
 }
