@@ -52,11 +52,15 @@ func GetTyper(t reflect.Type) (Typer, error) {
 
 type BaseTyper interface {
 	Type() reflect.Type
-	NumArgs() (min int, max int)
-	CanBeValue(arg string) bool
 }
 type BaseTypeArgNamer interface {
 	ArgName() string
+}
+type BaseTypeCanBeValuer interface {
+	CanBeValue(arg string) bool
+}
+type BaseTypeNumArgs interface {
+	NumArgs() (int, int)
 }
 type BaseTyperParser interface {
 	BaseTyper
@@ -84,8 +88,24 @@ func (s SliceWrap) Set(source reflect.Value, args []string) error {
 	return nil
 }
 
+func (s SliceWrap) CanBeValue(arg string) bool {
+	if cbv, ok := s.BaseTyperParser.(BaseTypeCanBeValuer); ok {
+		return cbv.CanBeValue(arg)
+	}
+	return true
+}
+
+func (s SliceWrap) NumArgs() (int, int) {
+	if an, ok := s.BaseTyperParser.(BaseTypeNumArgs); ok {
+		return an.NumArgs()
+	}
+	return 1, 1
+}
+
 type Typer interface {
 	BaseTyper
+	BaseTypeNumArgs
+	BaseTypeCanBeValuer
 	Set(source reflect.Value, args []string) error
 }
 
@@ -102,6 +122,20 @@ func SetToSource(source, val reflect.Value) {
 		}
 	}
 	source.Set(val)
+}
+
+func (b ValueWrap) CanBeValue(arg string) bool {
+	if cbv, ok := b.BaseTyperParser.(BaseTypeCanBeValuer); ok {
+		return cbv.CanBeValue(arg)
+	}
+	return true
+}
+
+func (b ValueWrap) NumArgs() (int, int) {
+	if an, ok := b.BaseTyperParser.(BaseTypeNumArgs); ok {
+		return an.NumArgs()
+	}
+	return 1, 1
 }
 
 func (b ValueWrap) ArgName() string {
@@ -122,10 +156,8 @@ func (b ValueWrap) Set(source reflect.Value, args []string) error {
 
 type Int struct{}
 
-func (Int) Type() reflect.Type     { return reflect.TypeOf(int(0)) }
-func (Int) CanBeValue(string) bool { return true }
-func (Int) NumArgs() (int, int)    { return 1, 1 }
-func (Int) ArgName() string        { return "number" }
+func (Int) Type() reflect.Type { return reflect.TypeOf(int(0)) }
+func (Int) ArgName() string    { return "number" }
 func (Int) ParseArgs(args []string) (reflect.Value, error) {
 	val, err := strconv.Atoi(args[0])
 	if err != nil {
