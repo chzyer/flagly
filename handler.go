@@ -46,6 +46,13 @@ func (h *Handler) ResetHandler() {
 	h.Children = nil
 }
 
+// combine NewHander(name).SetHanderFunc()/AddHandler(subHandler)
+func (h *Handler) AddSubHandler(name string, function interface{}) {
+	subHandler := NewHandler(name)
+	subHandler.SetHandleFunc(function)
+	h.AddHandler(subHandler)
+}
+
 func (h *Handler) AddHandler(child *Handler) {
 	child.Parent = h
 	h.Children = append(h.Children, child)
@@ -71,6 +78,15 @@ func (h *Handler) SetOptionType(option reflect.Type) error {
 		h.Options, err = h.parseOption()
 		if err != nil {
 			return err
+		}
+
+		if IsImplementDescer(h.OptionType) {
+			op := h.OptionType
+			if op.Kind() == reflect.Ptr {
+				op = op.Elem()
+			}
+			value := reflect.New(op)
+			h.Desc = value.Interface().(FlaglyDescer).FlaglyDesc()
 		}
 	}
 	return nil
@@ -153,15 +169,6 @@ func (h *Handler) Compile(t reflect.Type) error {
 		if err := h.SetOptionType(t); err != nil {
 			return err
 		}
-	}
-
-	if IsImplementDescer(h.OptionType) {
-		op := h.OptionType
-		if op.Kind() == reflect.Ptr {
-			op = op.Elem()
-		}
-		value := reflect.New(op)
-		h.Desc = value.Interface().(FlaglyDescer).FlaglyDesc()
 	}
 
 	if t.Kind() == reflect.Ptr {
@@ -457,11 +464,6 @@ func (h *Handler) usage(buf *bytes.Buffer, prefix string) error {
 	children := h.GetChildren()
 	hasCommands := len(children) > 0
 
-	if h.Desc != "" {
-		buf.WriteString(h.Desc)
-		buf.WriteString("\n\n")
-	}
-
 	if h.Name != "" {
 		buf.WriteString("usage: " + prefix + h.Name)
 		if hasFlags {
@@ -487,6 +489,11 @@ func (h *Handler) usage(buf *bytes.Buffer, prefix string) error {
 				}
 			}
 		}
+		buf.WriteString("\n")
+	}
+
+	if h.Desc != "" {
+		buf.WriteString(h.Desc)
 		buf.WriteString("\n")
 	}
 

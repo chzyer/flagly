@@ -85,9 +85,12 @@ func (f *FlaglySet) Compile(target interface{}) error {
 	return f.subHandler.Compile(reflect.TypeOf(target))
 }
 
+func (f *FlaglySet) AddSubHandler(command string, hf interface{}) {
+	f.subHandler.AddSubHandler(command, hf)
+}
+
 func (f *FlaglySet) Add(h *Handler) {
 	f.subHandler.AddHandler(h)
-	return
 }
 
 func (f *FlaglySet) SetHandleFunc(hf interface{}) {
