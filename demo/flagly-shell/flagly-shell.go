@@ -35,6 +35,7 @@ import (
 
 	"github.com/chzyer/flagly"
 	"github.com/chzyer/readline"
+	"github.com/google/shlex"
 )
 
 type Help struct{}
@@ -111,7 +112,12 @@ func main() {
 		if line == "" {
 			continue
 		}
-		if err := fset.Run(flagly.SplitArgs(line)); err != nil {
+		command, err := shlex.Split(line)
+		if err != nil {
+			println("error: " + err.Error())
+			continue
+		}
+		if err := fset.Run(command); err != nil {
 			println(err.Error())
 		}
 	}
