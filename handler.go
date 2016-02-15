@@ -322,6 +322,11 @@ func (h *Handler) parseToStruct(v reflect.Value, args []string) ([]string, error
 			return args, fmt.Errorf("invalid option type: %v", op.Type)
 		}
 	}
+	if IsImplementVerifier(v.Type()) {
+		if err := v.Interface().(FlaglyVerifier).FlaglyVerify(); err != nil {
+			return args, Error(err.Error())
+		}
+	}
 	return args, nil
 }
 

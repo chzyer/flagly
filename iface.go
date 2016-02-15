@@ -3,10 +3,11 @@ package flagly
 import "reflect"
 
 var (
-	emptyFlaglyIniter FlaglyIniter
-	emptyFlaglyDescer FlaglyDescer
-	FlaglyIniterName  = "FlaglyInit"
-	flaglyHandle      = "FlaglyHandle"
+	emptyFlaglyIniter   FlaglyIniter
+	emptyFlaglyDescer   FlaglyDescer
+	emptyFlaglyVerifier FlaglyVerifier
+	FlaglyIniterName    = "FlaglyInit"
+	flaglyHandle        = "FlaglyHandle"
 )
 
 type FlaglyIniter interface {
@@ -17,12 +18,20 @@ type FlaglyDescer interface {
 	FlaglyDesc() string
 }
 
+type FlaglyVerifier interface {
+	FlaglyVerify() error
+}
+
 func IsImplementIniter(t reflect.Type) bool {
 	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyIniter).Elem())
 }
 
 func IsImplementDescer(t reflect.Type) bool {
 	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyDescer).Elem())
+}
+
+func IsImplementVerifier(t reflect.Type) bool {
+	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyVerifier).Elem())
 }
 
 func IsImplemented(t, target reflect.Type) bool {
