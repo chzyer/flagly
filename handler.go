@@ -144,7 +144,7 @@ func (h *Handler) tryToAddHelpOption(ops []*Option) []*Option {
 	if len(h.GetChildren()) == 0 {
 		hasHelp := false
 		for _, op := range ops {
-			if op.Name == "-h" {
+			if op.Name == "h" {
 				hasHelp = true
 				break
 			}
