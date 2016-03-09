@@ -123,6 +123,10 @@ func (f *FlaglySet) Usage() string {
 	return buffer.String()
 }
 
+func (f *FlaglySet) Close() {
+	f.subHandler.Close()
+}
+
 func IsShowUsage(err error) *showUsageError {
 	if s, ok := err.(*showUsageError); ok {
 		return s

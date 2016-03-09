@@ -26,6 +26,7 @@ type Handler struct {
 	OptionType    reflect.Type
 	handleFunc    reflect.Value
 	onGetChildren func(*Handler) []*Handler
+	onExit        func()
 }
 
 func NewHandler(name string) *Handler {
@@ -33,7 +34,6 @@ func NewHandler(name string) *Handler {
 		Name:    name,
 		context: make(map[string]reflect.Value),
 	}
-
 	return h
 }
 
@@ -42,6 +42,10 @@ func (h *Handler) GetRoot() *Handler {
 		return h.Parent.GetRoot()
 	}
 	return h
+}
+
+func (h *Handler) SetOnExit(f func()) {
+	h.onExit = f
 }
 
 func (h *Handler) ResetHandler() {
@@ -541,6 +545,15 @@ func (h *Handler) usageOptions(name string) string {
 		}
 	}
 	return buf.String()
+}
+
+func (h *Handler) Close() {
+	if h.onExit != nil {
+		h.onExit()
+	}
+	for _, ch := range h.GetChildren() {
+		ch.Close()
+	}
 }
 
 func (h *Handler) Bind(ptr reflect.Value, args []string) (err error) {
