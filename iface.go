@@ -3,9 +3,9 @@ package flagly
 import "reflect"
 
 var (
-	emptyFlaglyIniter   FlaglyIniter
-	emptyFlaglyDescer   FlaglyDescer
-	emptyFlaglyVerifier FlaglyVerifier
+	emptyFlaglyIniter   = reflect.TypeOf(new(FlaglyIniter)).Elem()
+	emptyFlaglyDescer   = reflect.TypeOf(new(FlaglyDescer)).Elem()
+	emptyFlaglyVerifier = reflect.TypeOf(new(FlaglyVerifier)).Elem()
 	FlaglyIniterName    = "FlaglyInit"
 	flaglyHandle        = "FlaglyHandle"
 )
@@ -23,15 +23,15 @@ type FlaglyVerifier interface {
 }
 
 func IsImplementIniter(t reflect.Type) bool {
-	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyIniter).Elem())
+	return IsImplemented(t, emptyFlaglyIniter)
 }
 
 func IsImplementDescer(t reflect.Type) bool {
-	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyDescer).Elem())
+	return IsImplemented(t, emptyFlaglyDescer)
 }
 
 func IsImplementVerifier(t reflect.Type) bool {
-	return IsImplemented(t, reflect.TypeOf(&emptyFlaglyVerifier).Elem())
+	return IsImplemented(t, emptyFlaglyVerifier)
 }
 
 func IsImplemented(t, target reflect.Type) bool {

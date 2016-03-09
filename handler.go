@@ -21,6 +21,7 @@ type Handler struct {
 	Desc     string
 	Children []*Handler
 
+	context       map[string]reflect.Value
 	Options       []*Option
 	OptionType    reflect.Type
 	handleFunc    reflect.Value
@@ -29,7 +30,8 @@ type Handler struct {
 
 func NewHandler(name string) *Handler {
 	h := &Handler{
-		Name: name,
+		Name:    name,
+		context: make(map[string]reflect.Value),
 	}
 
 	return h
@@ -47,14 +49,16 @@ func (h *Handler) ResetHandler() {
 }
 
 // combine NewHander(name).SetHanderFunc()/AddHandler(subHandler)
-func (h *Handler) AddSubHandler(name string, function interface{}) {
+func (h *Handler) AddSubHandler(name string, function interface{}) *Handler {
 	subHandler := NewHandler(name)
 	subHandler.SetHandleFunc(function)
 	h.AddHandler(subHandler)
+	return subHandler
 }
 
 func (h *Handler) AddHandler(child *Handler) {
 	child.Parent = h
+	child.context = h.context
 	h.Children = append(h.Children, child)
 	child.EnsureHelpOption()
 }
@@ -97,6 +101,7 @@ func (h *Handler) SetOptionType(option reflect.Type) error {
 // 2. func(*struct) error
 // 3. func(*struct, *flagly.Handler) error
 // 4. func(*flagly.Handler) error
+// 5. func(Handler, Context) error
 func (h *Handler) SetHandleFunc(obj interface{}) {
 	err := h.setHandleFunc(reflect.ValueOf(obj))
 	if err != nil {
@@ -157,6 +162,11 @@ func (h *Handler) CompileIface(obj interface{}) error {
 
 func (h *Handler) log(obj interface{}) {
 	println(fmt.Sprintf("[handler:%v] %v", h.Name, obj))
+}
+
+func (h *Handler) Context(obj interface{}) {
+	value := reflect.ValueOf(obj)
+	h.context[value.Type().String()] = value
 }
 
 func (h *Handler) Compile(t reflect.Type) error {
@@ -359,7 +369,11 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 				// TODO: must be a pointer
 				ins[i] = reflect.ValueOf(h)
 			default:
-				ins[i] = reflect.Zero(t.In(i))
+				if val, ok := h.context[tIn.String()]; ok {
+					ins[i] = val
+				} else {
+					ins[i] = reflect.Zero(t.In(i))
+				}
 			}
 		}
 		if len(ins) > 0 {
