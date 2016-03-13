@@ -10,7 +10,7 @@ import (
 
 var (
 	types    = map[string]Typer{}
-	nilValue reflect.Value
+	NilValue reflect.Value
 )
 
 func init() {
@@ -161,7 +161,7 @@ func (Int) ArgName() string    { return "number" }
 func (Int) ParseArgs(args []string) (reflect.Value, error) {
 	val, err := strconv.Atoi(args[0])
 	if err != nil {
-		return nilValue, err
+		return NilValue, err
 	}
 	return reflect.ValueOf(val), nil
 }
@@ -198,7 +198,7 @@ func (Duration) CanBeValue(string) bool { return true }
 func (Duration) ParseArgs(args []string) (reflect.Value, error) {
 	a, err := time.ParseDuration(args[0])
 	if err != nil {
-		return nilValue, err
+		return NilValue, err
 	}
 	return reflect.ValueOf(a), nil
 }

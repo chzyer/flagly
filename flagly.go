@@ -81,8 +81,10 @@ func New(name string) *FlaglySet {
 	return fset
 }
 
-func (f *FlaglySet) Context(obj interface{}) {
-	f.subHandler.Context(obj)
+func (f *FlaglySet) Context(obj ...interface{}) {
+	for _, o := range obj {
+		f.subHandler.Context(o)
+	}
 }
 
 func (f *FlaglySet) Compile(target interface{}) error {
