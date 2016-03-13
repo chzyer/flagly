@@ -63,6 +63,9 @@ func (h *Handler) AddSubHandler(name string, function interface{}) *Handler {
 func (h *Handler) AddHandler(child *Handler) {
 	child.Parent = h
 	child.context = h.context
+	for _, ch := range child.GetChildren() {
+		ch.context = h.context
+	}
 	h.Children = append(h.Children, child)
 	child.EnsureHelpOption()
 }
@@ -368,6 +371,13 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 		ins := make([]reflect.Value, numIn)
 		for i := 0; i < numIn; i++ {
 			tIn := t.In(i)
+			if i == 0 {
+				ins[0] = stack[len(stack)-1]
+				if tIn.Kind() != reflect.Ptr {
+					ins[0] = ins[0].Elem()
+				}
+				continue
+			}
 			switch tIn.String() {
 			case "*" + handlerPkgPath:
 				// TODO: must be a pointer
@@ -379,9 +389,6 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 					ins[i] = reflect.Zero(t.In(i))
 				}
 			}
-		}
-		if len(ins) > 0 {
-			ins[0] = stack[len(stack)-1]
 		}
 		// first argument is a struct
 		out := h.handleFunc.Call(ins)
