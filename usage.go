@@ -13,7 +13,12 @@ type showUsageError struct {
 
 func (s showUsageError) Error() string {
 	if s.info != "" {
-		return s.info + "\n\n" + s.Usage()
+		usage := s.Usage()
+		if usage != "" {
+			return s.info + "\n\n" + usage
+		}
+		return s.info
+
 	}
 	return s.Usage()
 }
@@ -39,12 +44,16 @@ func ShowUsage(hs []*Handler) string {
 		prefix += hs[i].UsagePrefix() + " "
 	}
 	prefix = strings.TrimSpace(prefix)
-	h := hs[0]
-	usage := h.Usage(prefix)
-	for i := 1; i < len(hs); i++ {
-		if hs[i].HasFlagOptions() {
-			usage += hs[i].usageOptions(hs[i].Name + " options")
+	if len(hs) > 0 {
+		h := hs[0]
+		usage := h.Usage(prefix)
+		for i := 1; i < len(hs); i++ {
+			if hs[i].HasFlagOptions() {
+				usage += hs[i].usageOptions(hs[i].Name + " options")
+			}
 		}
+		return usage
+	} else {
+		return ""
 	}
-	return usage
 }
