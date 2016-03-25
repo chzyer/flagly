@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	Verbose bool   `v desc:"be more verbose"`
-	Name    string "[0]"
+	Verbose bool   `name:"v" desc:"be more verbose"`
+	Name    string `name:"[0]"`
 }
 
 func NewConfig() *Config {

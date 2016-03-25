@@ -4,13 +4,13 @@ import "github.com/chzyer/flagly"
 
 type Git struct {
 	// flags for flagly-git
-	Version bool "v"
+	Version bool `name:"v"`
 
 	// sub handlers must be specified `flaglyHandler` tag
-	Clone *GitClone "flaglyHandler"
-	Init  *GitInit  "flaglyHandler"
+	Clone *GitClone `flagly:"handler"`
+	Init  *GitInit  `flagly:"handler"`
 
-	Add *GitAdd "flaglyHandler"
+	Add *GitAdd `flagly:"handler"`
 }
 
 func (g *Git) FlaglyInit() {

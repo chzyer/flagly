@@ -6,37 +6,37 @@ func TestTagParser(t *testing.T) {
 	s := `bson:"dfdf df df " json:"hello dfdf" xml:dfdf sd`
 	st := StructTag(s)
 	if st.Get("json") != "hello dfdf" {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if st.Get("bson") != "dfdf df df " {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if !st.Has("xml") {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if st.Get("xml") != "dfdf" {
-		t.Fatal()
+		t.Fatal("error")
 	}
 
 	st = StructTag(`quote optional default:"" required`)
 	if !st.Has("optional") {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if st.GetPtr("default") == nil {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if st.GetPtr("kjkj") != nil {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if st.GetName() != "quote" {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	if !st.Has("required") {
-		t.Fatal()
+		t.Fatal("error")
 	}
 
 	st = StructTag(`"quote"`)
 	if st.GetName() != "quote" {
-		t.Fatal()
+		t.Fatal("error")
 	}
 }

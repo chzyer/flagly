@@ -8,15 +8,15 @@ import (
 
 type GitClone struct {
 	// we can get struct `Git` directly by presenting `flaglyParent`,
-	Parent *Git `flaglyParent`
+	Parent *Git `flagly:"parent"`
 
-	Verbose  bool   `v desc:"be more verbose"`
-	Quiet    bool   `q desc:"be more quiet"`
-	Progress bool   `progress desc:"force progress reporting"`
+	Verbose  bool   `name:"v" desc:"be more verbose"`
+	Quiet    bool   `name:"q" desc:"be more quiet"`
+	Progress bool   `name:"progress" desc:"force progress reporting"`
 	Template string `arg:"template-directory"`
 
-	Repo string `[0]`
-	Dir  string `[1] default:"."`
+	Repo string `name:"[0]"`
+	Dir  string `name:"[1]" default:"."`
 }
 
 func (g *GitClone) FlaglyInit() {

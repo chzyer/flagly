@@ -1,7 +1,7 @@
 package main
 
 type GitInit struct {
-	Quiet bool `q desc:"be quiet"`
+	Quiet bool `name:"q" desc:"be quiet"`
 }
 
 func (GitInit) FlaglyDesc() string {

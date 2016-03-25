@@ -80,7 +80,6 @@ func (st StructTag) Has(name string) bool {
 		}
 		s = s[idx+1:]
 	}
-	return false
 }
 
 func (st StructTag) GetName() string {

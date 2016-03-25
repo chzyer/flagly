@@ -358,7 +358,9 @@ func (h *Handler) bindStackToStruct(stack []reflect.Value, value reflect.Value) 
 	t := value.Type()
 	for i := 0; i < value.NumField(); i++ {
 		field := t.Field(i)
-		if StructTag(field.Tag).GetName() == flaglyParentName {
+		tag := StructTag(field.Tag)
+		if tag.GetName() == flaglyParentName ||
+			tag.Has("flagly") == "parent" {
 			for _, s := range stack {
 				if s.Type().String() == field.Type.String() {
 					value.Field(i).Set(s)

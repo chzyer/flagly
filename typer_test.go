@@ -14,10 +14,10 @@ func TestTyper(t *testing.T) {
 	}
 	typer.Set(reflect.ValueOf(&mapStr), []string{"a=b"})
 	if mapStr["a"] != "b" {
-		t.Fatal()
+		t.Fatal("error")
 	}
 	typer.Set(reflect.ValueOf(&mapStr), []string{"b=c"})
 	if mapStr["a"] != "b" || mapStr["b"] != "c" {
-		t.Fatal()
+		t.Fatal("error")
 	}
 }

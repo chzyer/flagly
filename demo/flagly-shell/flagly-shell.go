@@ -47,7 +47,7 @@ func (Help) FlaglyHandle(h *flagly.Handler) error {
 // -----------------------------------------------------------------------------
 
 type Time struct {
-	Layout string `[0] default:"2006-01-02 15:04:05"`
+	Layout string `name:"[0]" default:"2006-01-02 15:04:05"`
 }
 
 func (t *Time) FlaglyHandle() error {
@@ -57,8 +57,8 @@ func (t *Time) FlaglyHandle() error {
 }
 
 type Base64 struct {
-	IsDecode bool   `d desc:"decode string"`
-	Content  string `[0]`
+	IsDecode bool   `name:"d" desc:"decode string"`
+	Content  string `name:"[0]"`
 }
 
 func (b *Base64) FlaglyHandle() error {
@@ -81,9 +81,9 @@ func (b *Base64) FlaglyHandle() error {
 // -----------------------------------------------------------------------------
 
 type Program struct {
-	Help   *Help   `flaglyHandler`
-	Time   *Time   `flaglyHandler`
-	Base64 *Base64 `flaglyHandler`
+	Help   *Help   `flagly:"handler"`
+	Time   *Time   `flagly:"handler"`
+	Base64 *Base64 `flagly:"handler"`
 }
 
 func main() {
