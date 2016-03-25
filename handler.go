@@ -360,7 +360,7 @@ func (h *Handler) bindStackToStruct(stack []reflect.Value, value reflect.Value) 
 		field := t.Field(i)
 		tag := StructTag(field.Tag)
 		if tag.GetName() == flaglyParentName ||
-			tag.Has("flagly") == "parent" {
+			tag.Get("flagly") == "parent" {
 			for _, s := range stack {
 				if s.Type().String() == field.Type.String() {
 					value.Field(i).Set(s)
