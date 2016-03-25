@@ -191,10 +191,10 @@ func (h *Handler) Compile(t reflect.Type) error {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		if StructTag(field.Tag).GetName() == flaglyHandler {
+		tag := StructTag(field.Tag)
+		if tag.GetName() == flaglyHandler || tag.Get("flagly") == "handler" {
 			subh := NewHandler(strings.ToLower(field.Name))
 			if err := subh.Compile(field.Type); err != nil {
 				return err

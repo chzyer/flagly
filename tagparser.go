@@ -84,6 +84,13 @@ func (st StructTag) Has(name string) bool {
 }
 
 func (st StructTag) GetName() string {
+	if name := st.getName(); name != "" {
+		return name
+	}
+	return st.Get("name")
+}
+
+func (st StructTag) getName() string {
 	s := string(st)
 	idx := strings.Index(s, " ")
 	if idx >= 0 {

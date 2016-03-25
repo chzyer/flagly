@@ -213,7 +213,7 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := StructTag(field.Tag)
-		if strings.HasPrefix(tag.GetName(), flaglyPrefix) {
+		if strings.HasPrefix(tag.GetName(), flaglyPrefix) || tag.Has("flagly") {
 			continue
 		}
 
