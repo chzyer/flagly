@@ -1,6 +1,9 @@
 package flagly
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 var (
 	ErrShowUsage error = showUsageError{}
@@ -30,6 +33,10 @@ func (s *showUsageError) Trace(h *Handler) *showUsageError {
 
 func (s *showUsageError) Usage() string {
 	return ShowUsage(s.handlers)
+}
+
+func Errorf(format string, obj ...interface{}) error {
+	return Error(fmt.Sprintf(format, obj...))
 }
 
 func Error(info string) error {

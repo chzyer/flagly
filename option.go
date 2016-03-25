@@ -91,18 +91,19 @@ func (o *Option) init() error {
 	return nil
 }
 
-func (o *Option) BindTo(value reflect.Value, args []string) {
+func (o *Option) BindTo(value reflect.Value, args []string) error {
 	if o.Index < 0 {
-		return
+		return nil
 	}
 	f := value.Elem().Field(o.Index)
 	if args == nil {
 		if o.HasDefault() {
-			o.Typer.Set(f, []string{*o.Default})
+			return o.Typer.Set(f, []string{*o.Default})
 		}
 	} else {
-		o.Typer.Set(f, args)
+		return o.Typer.Set(f, args)
 	}
+	return nil
 }
 
 func (o *Option) HasArgName() bool {

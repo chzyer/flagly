@@ -321,22 +321,26 @@ func (h *Handler) parseToStruct(v reflect.Value, args []string) ([]string, error
 	args = args[idx:]
 
 	for idx, op := range h.Options {
+		var err error
 		if op.IsArg() {
 			if op.ArgIdx == -1 {
-				op.BindTo(v, args)
+				err = op.BindTo(v, args)
 			} else if op.ArgIdx >= len(args) {
 				if op.HasDefault() {
-					op.BindTo(v, nil)
+					err = op.BindTo(v, nil)
 				} else {
 					// do nothing
 				}
 			} else {
-				op.BindTo(v, args[op.ArgIdx:op.ArgIdx+1])
+				err = op.BindTo(v, args[op.ArgIdx:op.ArgIdx+1])
 			}
 		} else if op.IsFlag() {
-			op.BindTo(v, tokens[idx])
+			err = op.BindTo(v, tokens[idx])
 		} else {
 			return args, fmt.Errorf("invalid option type: %v", op.Type)
+		}
+		if err != nil {
+			return nil, err
 		}
 	}
 	if IsImplementVerifier(v.Type()) {
