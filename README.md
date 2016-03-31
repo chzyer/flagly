@@ -49,12 +49,12 @@ type Git struct {
 	Version bool `v desc:"show version"`
 	
 	// sub handlers
-	Clone *GitClone `flaglyHandler`
-	Init  *GitInit  `flaglyHandler`
+	Clone *GitClone `flagly:"handler"`
+	Init  *GitInit  `flagly:"handler"`
 }
 
 type GitClone struct {
-	Parent *Git `flaglyParent`
+	Parent *Git `flagly:"parent"`
 
 	Verbose  bool   `v desc:"be more verbose"`
 	Quiet    bool   `q desc:"be more quiet"`
