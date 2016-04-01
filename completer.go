@@ -7,7 +7,7 @@ type HandlerCompleter struct {
 func (hc *HandlerCompleter) DoSegment(seg [][]rune, n int) [][]rune {
 	h := hc.h
 main:
-	for level := 0; level < len(seg); {
+	for level := 0; level < len(seg)-1; {
 		name := string(seg[level])
 		children := h.GetChildren()
 		for _, child := range children {
@@ -17,12 +17,12 @@ main:
 				continue main
 			}
 		}
-		ret := make([][]rune, len(children))
-		for idx, child := range children {
-			ret[idx] = []rune(child.Name)
-		}
-
-		return ret
 	}
-	return [][]rune{[]rune(h.Name)}
+	children := h.GetChildren()
+	ret := make([][]rune, len(children))
+	for idx, child := range children {
+		ret[idx] = []rune(child.Name)
+	}
+
+	return ret
 }
