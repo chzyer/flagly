@@ -15,8 +15,8 @@ type GitClone struct {
 	Progress bool   `name:"progress" desc:"force progress reporting"`
 	Template string `arg:"template-directory"`
 
-	Repo string `name:"[0]"`
-	Dir  string `name:"[1]" default:"."`
+	Repo string `type:"[0]"`
+	Dir  string `type:"[1]" default:"."`
 }
 
 func (g *GitClone) FlaglyInit() {

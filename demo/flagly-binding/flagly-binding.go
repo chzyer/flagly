@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Verbose bool   `name:"v" desc:"be more verbose"`
-	Name    string `name:"[0]"`
+	Name    string `type:"[0]"`
 }
 
 func NewConfig() *Config {

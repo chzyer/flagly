@@ -18,8 +18,8 @@ go get github.com/chzyer/flagly
 
 ```{go}
 type Config struct {
-	Verbose bool   `v desc:"be more verbose"`
-	Name    string "[0]"
+	Verbose bool   `name:"v" desc:"be more verbose"`
+	Name    string `type:"[0]"`
 }
 
 func NewConfig() *Config {
@@ -46,7 +46,7 @@ config: &{Verbose:true Name:name}
 
 ```{go}
 type Git struct {
-	Version bool `v desc:"show version"`
+	Version bool `name:"v" desc:"show version"`
 	
 	// sub handlers
 	Clone *GitClone `flagly:"handler"`
@@ -56,13 +56,13 @@ type Git struct {
 type GitClone struct {
 	Parent *Git `flagly:"parent"`
 
-	Verbose  bool   `v desc:"be more verbose"`
-	Quiet    bool   `q desc:"be more quiet"`
-	Progress bool   `progress desc:"force progress reporting"`
+	Verbose  bool   `name:"v" desc:"be more verbose"`
+	Quiet    bool   `name:"q" desc:"be more quiet"`
+	Progress bool   `name:"progress" desc:"force progress reporting"`
 	Template string `arg:"template-directory"`
 
-	Repo string `[0]`
-	Dir  string `[1] default`
+	Repo string `name:"[0]"`
+	Dir  string `name:"[1]" default:""`
 }
 
 func (g *GitClone) FlaglyHandle() error {
@@ -78,7 +78,7 @@ func (g *GitClone) FlaglyDesc() string {
 }
 
 type GitInit struct {
-	Quiet bool `q desc:"be quiet"`
+	Quiet bool `name:"q" desc:"be quiet"`
 }
 
 func (g *GitInit) FlaglyDesc() string {

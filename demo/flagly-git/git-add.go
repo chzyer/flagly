@@ -7,7 +7,7 @@ type GitAdd struct {
 	Update      bool `name:"u" desc:"update tracked files"`
 	Interactive bool `name:"i" desc:"interactive picking"`
 
-	PathSpec []string `name:"[]" arg:"pathspec"`
+	PathSpec []string `type:"[]" name:"pathspec"`
 }
 
 func (a *GitAdd) FlaglyDesc() string {

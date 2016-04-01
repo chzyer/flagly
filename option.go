@@ -159,16 +159,6 @@ func (o *Option) usage(buf *bytes.Buffer) {
 	b.WriteTo(buf)
 }
 
-func GetNameFromTag(tag StructTag) (name, longName string) {
-	name = tag.GetName()
-	if IsWrapBy(name, "[]") {
-		longName = tag.Get("name")
-	} else {
-		longName = tag.Get("long")
-	}
-	return
-}
-
 func IsWrapBy(s, ch2 string) bool {
 	return len(s) >= 2 && s[0] == ch2[0] && s[len(s)-1] == ch2[1]
 }
@@ -217,23 +207,19 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 			continue
 		}
 
-		short, long := GetNameFromTag(tag)
-		if short == "" {
-			short = strings.ToLower(field.Name)
+		name := tag.GetName()
+		if name == "" {
+			name = strings.ToLower(field.Name)
 		}
 		var op *Option
 
-		if IsWrapBy(short, "[]") {
-			if long == "" {
-				long = strings.ToLower(field.Name)
-			}
-			op, err = NewArg(long, GetIdxInArray(short), field.Type)
+		if IsWrapBy(tag.Get("type"), "[]") {
+			op, err = NewArg(name, GetIdxInArray(tag.Get("type")), field.Type)
 		} else {
-			op, err = NewFlag(short, field.Type)
+			op, err = NewFlag(name, field.Type)
 			if err != nil {
 				return nil, err
 			}
-			op.LongName = long
 		}
 		if op.Name == "-" {
 			return nil, fmt.Errorf(`name "-" is not allowed`)
