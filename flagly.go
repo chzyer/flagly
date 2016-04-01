@@ -16,7 +16,7 @@ const (
 
 var (
 	ErrMustAFunc         = errors.New("argument must be a func")
-	ErrFuncOutMustAError = errors.New("func.out must be a error")
+	ErrFuncOutMustAError = errors.New("FlaglyHandle(Context).out must be a error or nothing: %v")
 
 	ErrMustAPtrToStruct = errors.New("must a pointer to struct")
 	ErrMustAStruct      = errors.New("must a struct")

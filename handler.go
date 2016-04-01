@@ -122,7 +122,9 @@ func (h *Handler) setHandleFunc(funcValue reflect.Value) error {
 	}
 	t := funcValue.Type()
 	if t.NumOut() != 1 || !t.Out(0).Implements(IfaceError) {
-		return ErrFuncOutMustAError
+		if t.NumOut() != 0 {
+			return fmt.Errorf(ErrFuncOutMustAError.Error(), h.Name)
+		}
 	}
 	if t.NumIn() >= 1 {
 		if err := h.SetOptionType(t.In(0)); err != nil {
@@ -398,8 +400,10 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 		}
 		// first argument is a struct
 		out := h.handleFunc.Call(ins)
-		if err, ok := out[0].Interface().(error); ok {
-			return err
+		if len(out) != 0 {
+			if err, ok := out[0].Interface().(error); ok {
+				return err
+			}
 		}
 		return nil
 	} else {
