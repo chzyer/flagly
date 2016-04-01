@@ -81,6 +81,10 @@ func New(name string) *FlaglySet {
 	return fset
 }
 
+func (f *FlaglySet) Completer() *HandlerCompleter {
+	return &HandlerCompleter{f.subHandler}
+}
+
 func (f *FlaglySet) Context(obj ...interface{}) {
 	for _, o := range obj {
 		f.subHandler.Context(o)

@@ -217,10 +217,11 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 			op, err = NewArg(name, GetIdxInArray(tag.Get("type")), field.Type)
 		} else {
 			op, err = NewFlag(name, field.Type)
-			if err != nil {
-				return nil, err
-			}
 		}
+		if err != nil {
+			return nil, err
+		}
+
 		if op.Name == "-" {
 			return nil, fmt.Errorf(`name "-" is not allowed`)
 		}

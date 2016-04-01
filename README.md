@@ -3,6 +3,7 @@
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
 [![Build Status](https://travis-ci.org/chzyer/flagly.svg?branch=master)](https://travis-ci.org/chzyer/flagly)
 [![GoDoc](https://godoc.org/github.com/chzyer/flagly?status.svg)](https://godoc.org/github.com/chzyer/flagly)
+[![codebeat badge](https://codebeat.co/badges/4efbd40b-4d84-48f5-8363-df06c2e9b241)](https://codebeat.co/projects/github-com-chzyer-flagly)
 
 The easier way to parsing command-line flag in Golang, also building a command line app.
 

@@ -84,7 +84,18 @@ type Program struct {
 	Help   *Help   `flagly:"handler"`
 	Time   *Time   `flagly:"handler"`
 	Base64 *Base64 `flagly:"handler"`
+	Level1 *Level1 `flagly:"handler"`
 }
+
+type Level1 struct {
+	Level2 *Level2 `flagly:"handler"`
+}
+
+type Level2 struct {
+	Level3 *Level3 `flagly:"handler"`
+}
+
+type Level3 struct{}
 
 func main() {
 	rl, err := readline.NewEx(&readline.Config{
@@ -103,6 +114,7 @@ func main() {
 		println(err.Error())
 		os.Exit(1)
 	}
+	rl.Config.AutoComplete = &readline.SegmentComplete{fset.Completer()}
 
 	for {
 		line, err := rl.Readline()

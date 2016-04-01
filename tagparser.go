@@ -105,5 +105,6 @@ func (st StructTag) getName() string {
 			s = tmpName
 		}
 	}
+	s = strings.TrimSpace(s)
 	return s
 }

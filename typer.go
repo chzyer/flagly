@@ -2,6 +2,7 @@ package flagly
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,7 +15,7 @@ var (
 )
 
 func init() {
-	RegisterAll(Bool{}, String{}, Duration{}, Int{})
+	RegisterAll(Bool{}, String{}, Duration{}, Int{}, IPNet{})
 	Register(MapStringString{})
 }
 
@@ -201,6 +202,23 @@ func (Duration) ParseArgs(args []string) (reflect.Value, error) {
 		return NilValue, err
 	}
 	return reflect.ValueOf(a), nil
+}
+
+type IPNet struct{}
+
+func (IPNet) Type() reflect.Type     { return reflect.TypeOf(&net.IPNet{}) }
+func (IPNet) NumArgs() (int, int)    { return 1, 1 }
+func (IPNet) CanBeValue(string) bool { return true }
+func (IPNet) ParseArgs(args []string) (reflect.Value, error) {
+	if idx := strings.Index(args[0], "/"); idx < 0 {
+		args[0] += "/32"
+	}
+
+	_, ipnet, err := net.ParseCIDR(args[0])
+	if err != nil {
+		return NilValue, err
+	}
+	return reflect.ValueOf(ipnet), nil
 }
 
 type MapStringString struct{}
