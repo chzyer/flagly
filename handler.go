@@ -196,7 +196,7 @@ func (h *Handler) Compile(t reflect.Type) error {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := StructTag(field.Tag)
-		if tag.GetName() == flaglyHandler || tag.Get("flagly") == "handler" {
+		if tag.GetName() == flaglyHandler || tag.FlaglyHas("handler") {
 			subh := NewHandler(strings.ToLower(field.Name))
 			if err := subh.Compile(field.Type); err != nil {
 				return err
@@ -362,7 +362,7 @@ func (h *Handler) bindStackToStruct(stack []reflect.Value, value reflect.Value) 
 		field := t.Field(i)
 		tag := StructTag(field.Tag)
 		if tag.GetName() == flaglyParentName ||
-			tag.Get("flagly") == "parent" {
+			tag.FlaglyHas("parent") {
 			for _, s := range stack {
 				if s.Type().String() == field.Type.String() {
 					value.Field(i).Set(s)

@@ -8,6 +8,20 @@ import (
 
 type StructTag string
 
+func (st StructTag) Flagly() []string {
+	sp := strings.Split(st.Get("flagly"), ",")
+	return sp
+}
+
+func (st StructTag) FlaglyHas(name string) bool {
+	for _, s := range st.Flagly() {
+		if s == name {
+			return true
+		}
+	}
+	return false
+}
+
 func (st StructTag) GetPtr(name string) *string {
 	if !st.Has(name) {
 		return nil

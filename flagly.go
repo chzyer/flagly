@@ -40,6 +40,9 @@ func Run(target interface{}) {
 }
 
 func BindByArgs(target interface{}, args []string) error {
+	if args == nil {
+		args = []string{""}
+	}
 	fset, err := Compile(args[0], target)
 	if err != nil {
 		return err
