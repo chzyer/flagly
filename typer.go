@@ -79,13 +79,16 @@ func (s SliceWrap) Set(source reflect.Value, args []string) error {
 	if len(args) == 0 {
 		return nil
 	}
-	arg, err := s.BaseTyperParser.ParseArgs(args)
-	if err != nil {
-		return err
+
+	for _, a := range args {
+		arg, err := s.BaseTyperParser.ParseArgs([]string{a})
+		if err != nil {
+			return err
+		}
+		val := reflect.New(s.BaseTyperParser.Type())
+		SetToSource(val, arg)
+		source.Set(reflect.Append(source, val.Elem()))
 	}
-	val := reflect.New(s.BaseTyperParser.Type())
-	SetToSource(val, arg)
-	source.Set(reflect.Append(source, val.Elem()))
 	return nil
 }
 

@@ -175,7 +175,14 @@ func (h *Handler) log(obj interface{}) {
 
 func (h *Handler) Context(obj interface{}) {
 	value := reflect.ValueOf(obj)
-	h.context[value.Type().String()] = value
+	typ := value.Type()
+	if typ.Kind() == reflect.Ptr {
+		h.context[typ.String()] = value
+		h.context[typ.Elem().String()] = value
+	} else {
+		h.context[typ.String()] = value
+		h.context[reflect.PtrTo(typ).String()] = value
+	}
 }
 
 func (h *Handler) Compile(t reflect.Type) error {
@@ -392,6 +399,15 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 				ins[i] = reflect.ValueOf(h)
 			default:
 				if val, ok := h.context[tIn.String()]; ok {
+					if val.Type().String() != tIn.String() {
+						if strings.HasPrefix(tIn.String(), "*") {
+							// want a pointer
+							// todo, make a pointer
+							val = reflect.New(tIn)
+						} else {
+							val = val.Elem()
+						}
+					}
 					ins[i] = val
 				} else {
 					ins[i] = reflect.Zero(t.In(i))
