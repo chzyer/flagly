@@ -33,8 +33,8 @@ func Bind(target interface{}) {
 	}
 }
 
-func Run(target interface{}) {
-	if err := RunByArgs(target, os.Args); err != nil {
+func Run(target interface{}, context ...interface{}) {
+	if err := RunByArgs(target, os.Args, context...); err != nil {
 		Exit(err)
 	}
 }
@@ -54,11 +54,12 @@ func BindByArgs(target interface{}, args []string) error {
 	return nil
 }
 
-func RunByArgs(target interface{}, args []string) error {
+func RunByArgs(target interface{}, args []string, context ...interface{}) error {
 	fset, err := Compile(args[0], target)
 	if err != nil {
 		return err
 	}
+	fset.Context(context...)
 	if err := fset.Run(args[1:]); err != nil {
 		return err
 	}
