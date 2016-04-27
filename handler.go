@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	EmptyError error
-	EmptyType  reflect.Type
-	EmptyValue reflect.Value
-	IfaceError = reflect.TypeOf(&EmptyError).Elem()
+	EmptyError  error
+	EmptyType   reflect.Type
+	EmptyValue  reflect.Value
+	IfaceError  = reflect.TypeOf(&EmptyError).Elem()
+	HandlerType = reflect.TypeOf(new(Handler))
 )
 
 type Handler struct {
@@ -42,6 +43,34 @@ func (h *Handler) GetRoot() *Handler {
 		return h.Parent.GetRoot()
 	}
 	return h
+}
+
+func (h *Handler) GetName() string {
+	return h.Name
+}
+
+func (h *Handler) findArgOption() *Option {
+	for _, op := range h.Options {
+		if op.IsArg() {
+			return op
+		}
+	}
+	return nil
+}
+
+func (h *Handler) GetTreeChildren() []Tree {
+	children := h.GetChildren()
+	if len(children) == 0 {
+		argOp := h.findArgOption()
+		if argOp != nil {
+			return argOp.GetTree()
+		}
+	}
+	ret := make([]Tree, len(children))
+	for idx, ch := range children {
+		ret[idx] = ch
+	}
+	return ret
 }
 
 func (h *Handler) SetOnExit(f func()) {
@@ -269,7 +298,7 @@ func (h *Handler) parseOption() ([]*Option, error) {
 	if h.OptionType == EmptyType {
 		return nil, nil
 	}
-	ops, err := ParseStructToOptions(h.OptionType)
+	ops, err := ParseStructToOptions(h, h.OptionType)
 	return ops, err
 }
 
@@ -572,10 +601,8 @@ func (h *Handler) usageOptions(name string) string {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("\n" + name + ":\n")
 	for _, op := range h.Options {
-		if op.IsFlag() {
-			op.usage(buf)
-			buf.WriteString("\n")
-		}
+		op.usage(buf)
+		buf.WriteString("\n")
 	}
 	return buf.String()
 }

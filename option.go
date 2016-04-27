@@ -43,6 +43,7 @@ type Option struct {
 	ArgName   *string
 	ArgIdx    int
 	ShowUsage bool
+	Tag       StructTag
 }
 
 func NewHelpFlag() *Option {
@@ -89,6 +90,15 @@ func (o *Option) init() error {
 	}
 	o.Typer = typer
 	return nil
+}
+
+func (o *Option) GetTree() []Tree {
+	tags := strings.Split(o.Tag.Get("select"), ",")
+	trees := make([]Tree, len(tags))
+	for idx, tag := range tags {
+		trees[idx] = StringTree(tag)
+	}
+	return trees
 }
 
 func (o *Option) BindTo(value reflect.Value, args []string) error {
@@ -147,15 +157,22 @@ func (o *Option) usage(buf *bytes.Buffer) {
 
 			}
 		}
-		if o.HasDesc() {
-			if b.Len() > length {
-				b.WriteString("\n" + strings.Repeat(" ", length))
-			} else {
-				b.WriteString(strings.Repeat(" ", length-b.Len()))
-			}
-			b.WriteString(o.Desc)
+	} else if o.IsArg() {
+		b.WriteString(o.Name)
+		if o.Tag.Get("select") != "" {
+			o.Desc = o.Tag.Get("select")
 		}
 	}
+
+	if o.HasDesc() {
+		if b.Len() > length {
+			b.WriteString("\n" + strings.Repeat(" ", length))
+		} else {
+			b.WriteString(strings.Repeat(" ", length-b.Len()))
+		}
+		b.WriteString(o.Desc)
+	}
+
 	b.WriteTo(buf)
 }
 
@@ -180,15 +197,27 @@ func GetMethod(s reflect.Value, name string) reflect.Value {
 	return method
 }
 
-func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
+func ParseStructToOptions(h *Handler, t reflect.Type) (ret []*Option, err error) {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 
 	descIdx := make(map[int]string)
-	if IsImplementIniter(t) {
-		value := reflect.New(t)
-		GetMethod(value, FlaglyIniterName).Call(nil)
+
+	value := reflect.New(t)
+	method := GetMethod(value, FlaglyIniterName)
+	if method.IsValid() {
+		methodType := method.Type()
+		args := make([]reflect.Value, methodType.NumIn())
+		for i := 0; i < methodType.NumIn(); i++ {
+			typ := methodType.In(i)
+			if typ.String() == HandlerType.String() {
+				args[i] = reflect.ValueOf(h)
+			} else {
+				args[i] = reflect.Zero(typ)
+			}
+		}
+		method.Call(args)
 		descMap := getDescMap()
 		elem := value.Elem()
 		for i := 0; i < elem.NumField(); i++ {
@@ -218,6 +247,7 @@ func ParseStructToOptions(t reflect.Type) (ret []*Option, err error) {
 		} else {
 			op, err = NewFlag(name, field.Type)
 		}
+		op.Tag = tag
 		if err != nil {
 			return nil, err
 		}
