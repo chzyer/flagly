@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	RegisterAll(Bool{}, String{}, Duration{}, Int{}, IPNet{})
+	RegisterAll(Bool{}, String{}, Duration{}, Int{}, Int64{}, IPNet{})
 	Register(MapStringString{})
 }
 
@@ -164,6 +164,18 @@ func (Int) Type() reflect.Type { return reflect.TypeOf(int(0)) }
 func (Int) ArgName() string    { return "number" }
 func (Int) ParseArgs(args []string) (reflect.Value, error) {
 	val, err := strconv.Atoi(args[0])
+	if err != nil {
+		return NilValue, err
+	}
+	return reflect.ValueOf(val), nil
+}
+
+type Int64 struct{}
+
+func (Int64) Type() reflect.Type { return reflect.TypeOf(int64(0)) }
+func (Int64) ArgName() string    { return "number" }
+func (Int64) ParseArgs(args []string) (reflect.Value, error) {
+	val, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
 		return NilValue, err
 	}

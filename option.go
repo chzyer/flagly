@@ -239,6 +239,8 @@ func ParseStructToOptions(h *Handler, t reflect.Type) (ret []*Option, err error)
 		name := tag.GetName()
 		if name == "" {
 			name = strings.ToLower(field.Name)
+		} else if name == "-" {
+			continue
 		}
 		var op *Option
 
@@ -247,10 +249,10 @@ func ParseStructToOptions(h *Handler, t reflect.Type) (ret []*Option, err error)
 		} else {
 			op, err = NewFlag(name, field.Type)
 		}
-		op.Tag = tag
 		if err != nil {
 			return nil, err
 		}
+		op.Tag = tag
 
 		if op.Name == "-" {
 			return nil, fmt.Errorf(`name "-" is not allowed`)
