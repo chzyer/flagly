@@ -8,6 +8,7 @@ var (
 	emptyFlaglyVerifier = reflect.TypeOf(new(FlaglyVerifier)).Elem()
 	FlaglyIniterName    = "FlaglyInit"
 	flaglyHandle        = "FlaglyHandle"
+	flaglyEnter         = "FlaglyEnter"
 )
 
 type FlaglyIniter interface {

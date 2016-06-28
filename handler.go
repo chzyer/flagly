@@ -164,6 +164,14 @@ func (h *Handler) setHandleFunc(funcValue reflect.Value) error {
 	return nil
 }
 
+func (h *Handler) findEnterFunc(t reflect.Type) *reflect.Method {
+	method, ok := t.MethodByName(flaglyEnter)
+	if ok {
+		return &method
+	}
+	return nil
+}
+
 func (h *Handler) findHandleFunc(t reflect.Type) *reflect.Method {
 	for i := 0; i < t.NumMethod(); i++ {
 		method := t.Method(i)
@@ -490,6 +498,12 @@ func (h *Handler) Run(stack *[]reflect.Value, args []string) (err error) {
 	*stack = append(*stack, value)
 
 	if len(args) > 0 {
+		enter := h.findEnterFunc(h.OptionType)
+		if enter != nil {
+			args := make([]reflect.Value, 1)
+			args[0] = value
+			enter.Func.Call(args)
+		}
 		for _, ch := range h.GetChildren() {
 			if args[0] == ch.Name {
 				err = ch.Run(stack, args[1:])
