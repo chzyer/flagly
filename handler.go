@@ -89,13 +89,17 @@ func (h *Handler) AddSubHandler(name string, function interface{}) *Handler {
 	return subHandler
 }
 
+func (h *Handler) copyContext() {
+	for _, ch := range h.Children {
+		ch.context = h.context
+		ch.copyContext()
+	}
+}
+
 func (h *Handler) AddHandler(child *Handler) {
 	child.Parent = h
-	child.context = h.context
-	for _, ch := range child.GetChildren() {
-		ch.context = h.context
-	}
 	h.Children = append(h.Children, child)
+	h.copyContext()
 	child.EnsureHelpOption()
 }
 
