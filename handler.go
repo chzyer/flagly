@@ -251,8 +251,12 @@ func (h *Handler) Compile(t reflect.Type) error {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tag := StructTag(field.Tag)
-		if tag.GetName() == flaglyHandler || tag.FlaglyHas("handler") {
-			subh := NewHandler(strings.ToLower(field.Name))
+		if tag.FlaglyHas("handler") {
+			name := tag.GetName()
+			if name == "" {
+				name = strings.ToLower(field.Name)
+			}
+			subh := NewHandler(name)
 			if err := subh.Compile(field.Type); err != nil {
 				return err
 			}
