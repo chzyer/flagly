@@ -23,6 +23,7 @@ type Handler struct {
 	Children []*Handler
 
 	context       map[string]reflect.Value
+	lambdaMap     map[string]func() []string
 	Options       []*Option
 	OptionType    reflect.Type
 	handleFunc    reflect.Value
@@ -32,8 +33,9 @@ type Handler struct {
 
 func NewHandler(name string) *Handler {
 	h := &Handler{
-		Name:    name,
-		context: make(map[string]reflect.Value),
+		Name:      name,
+		context:   make(map[string]reflect.Value),
+		lambdaMap: make(map[string]func() []string),
 	}
 	return h
 }
@@ -63,7 +65,7 @@ func (h *Handler) GetTreeChildren() []Tree {
 	if len(children) == 0 {
 		argOp := h.findArgOption()
 		if argOp != nil {
-			return argOp.GetTree()
+			return argOp.GetTree(h.lambdaMap)
 		}
 	}
 	ret := make([]Tree, len(children))
@@ -92,8 +94,13 @@ func (h *Handler) AddSubHandler(name string, function interface{}) *Handler {
 func (h *Handler) copyContext() {
 	for _, ch := range h.Children {
 		ch.context = h.context
+		ch.lambdaMap = h.lambdaMap
 		ch.copyContext()
 	}
+}
+
+func (h *Handler) Lambda(name string, fn func() []string) {
+	h.lambdaMap[name] = fn
 }
 
 func (h *Handler) AddHandler(child *Handler) {

@@ -95,6 +95,10 @@ func (f *FlaglySet) Context(obj ...interface{}) {
 	}
 }
 
+func (f *FlaglySet) Lambda(name string, fn func() []string) {
+	f.subHandler.Lambda(name, fn)
+}
+
 func (f *FlaglySet) Compile(target interface{}) error {
 	return f.subHandler.Compile(reflect.TypeOf(target))
 }

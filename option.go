@@ -92,10 +92,18 @@ func (o *Option) init() error {
 	return nil
 }
 
-func (o *Option) GetTree() []Tree {
-	tags := strings.Split(o.Tag.Get("select"), ",")
-	trees := make([]Tree, len(tags))
-	for idx, tag := range tags {
+func (o *Option) GetTree(lambdaMap map[string]func() []string) []Tree {
+	var candidates []string
+	if selectCall := o.Tag.Get("selectCall"); selectCall != "" {
+		if fn := lambdaMap[selectCall]; fn != nil {
+			candidates = fn()
+		}
+	}
+	if tags := o.Tag.Get("select"); tags != "" {
+		candidates = strings.Split(tags, ",")
+	}
+	trees := make([]Tree, len(candidates))
+	for idx, tag := range candidates {
 		trees[idx] = StringTree(tag)
 	}
 	return trees
