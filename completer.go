@@ -22,6 +22,11 @@ main:
 				continue main
 			}
 		}
+		h = nil
+		break
+	}
+	if h == nil {
+		return nil
 	}
 	children := h.GetTreeChildren()
 	ret := make([][]rune, len(children))
