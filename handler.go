@@ -221,16 +221,20 @@ func (h *Handler) log(obj interface{}) {
 	println(fmt.Sprintf("[handler:%v] %v", h.Name, obj))
 }
 
-func (h *Handler) Context(obj interface{}) {
+func SetContext(vals map[string]reflect.Value, obj interface{}) {
 	value := reflect.ValueOf(obj)
 	typ := value.Type()
 	if typ.Kind() == reflect.Ptr {
-		h.context[typ.String()] = value
-		h.context[typ.Elem().String()] = value
+		vals[typ.String()] = value
+		vals[typ.Elem().String()] = value
 	} else {
-		h.context[typ.String()] = value
-		h.context[reflect.PtrTo(typ).String()] = value
+		vals[typ.String()] = value
+		vals[reflect.PtrTo(typ).String()] = value
 	}
+}
+
+func (h *Handler) Context(obj interface{}) {
+	SetContext(h.context, obj)
 }
 
 func (h *Handler) Compile(t reflect.Type) error {
@@ -444,7 +448,7 @@ func (h *Handler) RawCall(vals []reflect.Value) error {
 	return nil
 }
 
-func (h *Handler) Call(stack []reflect.Value, args []string) error {
+func (h *Handler) Call(stack []reflect.Value, args []string, context map[string]reflect.Value) error {
 	if h.handleFunc.IsValid() {
 		t := h.handleFunc.Type()
 		numIn := t.NumIn()
@@ -463,7 +467,13 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 				// TODO: must be a pointer
 				ins[i] = reflect.ValueOf(h)
 			default:
-				if val, ok := h.context[tIn.String()]; ok {
+				val, ok := context[tIn.String()]
+				if !ok {
+					val, ok = h.context[tIn.String()]
+				}
+				if !ok {
+					ins[i] = reflect.Zero(t.In(i))
+				} else {
 					if val.Type().String() != tIn.String() {
 						if strings.HasPrefix(tIn.String(), "*") {
 							// want a pointer
@@ -474,8 +484,6 @@ func (h *Handler) Call(stack []reflect.Value, args []string) error {
 						}
 					}
 					ins[i] = val
-				} else {
-					ins[i] = reflect.Zero(t.In(i))
 				}
 			}
 		}
@@ -504,7 +512,7 @@ func (h *Handler) getChildNames() (names []string) {
 	return names
 }
 
-func (h *Handler) Run(stack *[]reflect.Value, args []string) (err error) {
+func (h *Handler) Run(stack *[]reflect.Value, args []string, context map[string]reflect.Value) (err error) {
 	defer func() {
 		if e := IsShowUsage(err); e != nil {
 			err = e.Trace(h)
@@ -534,14 +542,14 @@ func (h *Handler) Run(stack *[]reflect.Value, args []string) (err error) {
 		}
 		for _, ch := range h.GetChildren() {
 			if args[0] == ch.Name {
-				err = ch.Run(stack, args[1:])
+				err = ch.Run(stack, args[1:], context)
 				runed = true
 				break
 			}
 		}
 	}
 	if !runed {
-		err = h.Call(*stack, args)
+		err = h.Call(*stack, args, context)
 	}
 	return err
 }
@@ -682,3 +690,4 @@ func (h *Handler) Bind(ptr reflect.Value, args []string) (err error) {
 	}
 	return nil
 }
+

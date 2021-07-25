@@ -89,6 +89,10 @@ func (f *FlaglySet) Completer() *HandlerCompleter {
 	return &HandlerCompleter{f.subHandler}
 }
 
+func (f *FlaglySet) Handler() *Handler {
+	return f.subHandler
+}
+
 func (f *FlaglySet) Context(obj ...interface{}) {
 	for _, o := range obj {
 		f.subHandler.Context(o)
@@ -120,8 +124,12 @@ func (f *FlaglySet) Bind(value reflect.Value, args []string) error {
 }
 
 func (f *FlaglySet) Run(args []string) (err error) {
+	return f.RunWithContext(args, nil)
+}
+
+func (f *FlaglySet) RunWithContext(args []string, context map[string]reflect.Value) (err error) {
 	stack := []reflect.Value{}
-	if err = f.subHandler.Run(&stack, args); err != nil {
+	if err = f.subHandler.Run(&stack, args, context); err != nil {
 		return err
 	}
 	return
@@ -176,3 +184,4 @@ func getDescMap() map[uintptr]string {
 	descGuard.Unlock()
 	return ret
 }
+
