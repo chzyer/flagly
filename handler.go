@@ -431,6 +431,19 @@ func (h *Handler) bindStackToStruct(stack []reflect.Value, value reflect.Value) 
 	}
 }
 
+func (h *Handler) RawCall(vals []reflect.Value) error {
+	if !h.handleFunc.IsValid() {
+		return ErrShowUsage
+	}
+	out := h.handleFunc.Call(vals)
+	if len(out) != 0 {
+		if err, ok := out[0].Interface().(error); ok {
+			return err
+		}
+	}
+	return nil
+}
+
 func (h *Handler) Call(stack []reflect.Value, args []string) error {
 	if h.handleFunc.IsValid() {
 		t := h.handleFunc.Type()
