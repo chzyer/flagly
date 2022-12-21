@@ -533,6 +533,8 @@ func (h *Handler) Run(stack *[]reflect.Value, args []string, context map[string]
 	}
 	*stack = append(*stack, value)
 
+	h.bindStackToStruct(*stack, value)
+
 	if len(args) > 0 {
 		enter := h.findEnterFunc(h.OptionType)
 		if enter != nil {
@@ -690,4 +692,3 @@ func (h *Handler) Bind(ptr reflect.Value, args []string) (err error) {
 	}
 	return nil
 }
-
